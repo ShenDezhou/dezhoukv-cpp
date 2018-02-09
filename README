@@ -1,0 +1,133 @@
+这是一个基于automake/autoconf的Makefile模板
+
+如果你希望使用该模板，需要做以下事情：
+
+Quick Start:
+	svn co http://cvs.so.sohu.com:2080/svn/arch/trunk/Projects/MakefileDemo/ MDemo
+	cd YourPackageDir
+	../MDemo/applytpl projectname 1.0 yourmail@sohu-rd.com 'a.cpp b.cpp c.cpp k.h z.h'
+	make
+
+
+
+0.  假定你的项目叫做foo，项目根目录的位置是/foo
+
+1.  使用applytpl脚本 或者 手工执行以下操作
+1.1 拷贝MakefileDemo下的所有文件到/foo
+    必须的有：configure.ac acsite.m4 common.mk到项目根目录
+        demo/Makefile.am到项目的各个子目录(没有子目录的项目则是项目根目录)
+        Makefile.am到项目的顶层目录(多目录的项目)
+
+1.2	把MakefileDemo/demo/Makefile.am拷贝到项目的每个子目录，如果项目不分子目录那就直
+	接放到项目的根目录下。
+
+2.1 在Makefile.am中指定要BUILD的目标
+	include...                            #不要动  
+    bin_PROGRAMS=prog1 prog2              #需Build的可执行程序
+    noinst_LIBRARIES=libfoo3.a libfoo4.a  #需Build的的静态库，必须是lib*.a
+	---高级内容---
+    lib_LTLIBRARIES=libfoo1.la libfoo2.la #需Build的的动态库，必须是lib*.la
+    check_PROGRAMS=test1 test2            #make check时需Build的的测试程序
+    TESTS=test1 test2                     #make check时运行的测试程序
+    XFAIL_TESTS=test2                     #TESTS=中应该fail的那些
+    
+2.2 为每个需要编译的目标列出源文件和需要的库
+    demo_SOURCES=demo.cpp stdafx.cpp stdafx.h 
+    demo_LDADD=libfoo2.la -lace
+    libfoo2_la_SOURCES=demo.cpp stdafx.cpp stdafx.h 
+    最后一个"_"下划线前面是可执行程序或者库的名字，注意，libdemo2.a中的"."被换成"_"
+    _SOURCES列出了所有相关的源文件和头文件，不用关心其它子目录的内容
+    _LDADDS列出了需要link的库文件，可以用-l和直接写出库文件名两种方法
+
+2.---高级内容---   
+2.3 预编译头文件[可选]
+    如果你喜欢vc的预编译头文件
+    在Makefile.am中
+		include $(top_srcdir)/util-gch-dbg.mk
+		BUILT_SOURCES+=stdafx.gch
+	并使用stdafx.h作为预编译头文件
+        
+2.4 分离调试信息[可选]
+    如果你喜欢把庞大的debug info从执行程序动态库里去掉
+    在Makefile.am中
+		include $(top_srcdir)/util-gch-dbg.mk
+    	bindbg_DATA=xxx.dbg
+		libdbg_DATA=libyyy.so.dbg libzzz.la.dbg
+
+3.  在项目根目录的Makefile.am的SUBDIRS=这一句列出你所有需要build的子目，如
+    果这些子目录有依赖关系，请按照需要的顺序排列它们。嵌套的多级子目录依例
+	办理。例：SUBDIRS=foo_lib1 foo_src
+
+4.  修改configure.ac，在最后的AC_CONFIG_FILES列出所有需要build子目录的Makefile
+    例如
+    AC_CONFIG_FILES([Makefile foo_lib1/Makefile for_src/Makefile])
+    修改configure.ac的最前面的AC_INIT，依次列出项目名字、版本、联系人、简称
+    例如：  AC_INIT(Kirby Demo, 0.1.0, kirbyzhou@sohu-rd.com, kdemo)
+    
+    如果有必要，可以删掉或者添加AC_CONFIG_FILES前面的AK_DETECT_LIB2
+    这些内容用来检测程序依赖的ACE MySQL DB4 SQLITE等库
+    
+    
+5.  使用
+    ./pre-build       执行autoreconf和./configure来准备Makefile
+    make              Build所有代码
+    make DEBUG=y      Build所有代码，强制带上调试信息，并禁止优化
+	make OPTIMIZE=y   Build所有代码，强制优化
+    make PROFILE=y    Build所有代码，并开启gprof性能分析功能
+    make check        Build check_PROGRAMS里列出的所有测试程序，并运行测试程序
+    make install      安装bin_PROGRAMS和lib_LTLIBRARIES到configure --prefix指定的路径
+                      默认是/opt/demo
+    make dist         把所有的源码、Makefile等等等等打包
+    make clean        恢复到执行make以前的状态
+    make distclean    恢复到执行./configure以前的状态
+
+    autoreconf -isv   从Makefile.am和configure.ac生成configure
+    ./configure       检测环境配置，准备Makefile
+	configure的参数
+	    --[enable/disable]-debug            是否打开调试信息[-g]，默认允许
+		--[enable/disable]-optimize         enbale=-O3优化 disable=-O0
+		--[enbale/disable]-profile          是否允许profile
+
+6. 附录
+	宏AK_DETECT_LIB2                   用于检测第三方软件包ACE db4等等
+	AK_DETECT_LIB2(软件包的名字, 在哪些路径里搜索, 
+		1个标志性的头文件, 
+		若干标志性的库名[会依次检测这些库是否存在, 例如db-4.3 db-4.2 第一个满足要求的库被记录下来], 
+		在头文件和库中可以找到的一个标志性函数, 第三方软件包是否必须[required表示必须], 
+		-I的时候在软件包路径后面附加的部分
+			[例如软件包放在/opt/mysql下，但是必须-I/opt/mysql/include，此时此项填include]
+		-L的时候在软件包路径后面附加的部分
+			[例如软件包放在/opt/ACE_Wrapper下，但是必须-L/opt/ACE_Wrapper/lib，此时此项填lib])
+	e.g:
+	AK_DETECT_LIB2(ace551, [/usr/local/src/ACE* /usr/local/ACE* /opt/ACE*],
+		[ace/ACE.h], [ACE ACE551], [ACE::init],
+		[optional], [.], [lib])
+	检测成功后会修改CPPFLAGS和LIBS，加入对应的-I和-L选项
+	并把ace551_LDADD设置为-lACE或者-lACE551，在Makefile.am中可以用@ace551_LDADD@来引用。
+	目前主要是在使用berkerly db时用到这一特性，因为不同版本的bdb的库名不一样[db-4.4 db-4.3 db-4.2]
+
+	宏AK_CHECK_MODULE_ROOT             用于检测我们自己的软件包
+	AK_CHECK_MODULE_ROOT(varname, description, defaultpostion, includepath-suffix, libpath-suffix)
+	其中includepath-suffix和libpath-suffix的含义参见AK_DETECT_LIB2
+	e.g:
+	AK_CHECK_MODULE_ROOT(SSPLATFORM_ROOT, [the basic platform module], ssplatform, [], [Library/Linux]
+	要求用户在执行configure时必须给出SSPLATFORM_ROOT的值或者存在ssplatform目录或者存在ssplatform.default目录
+	例如：./configure SSPLATFORM_ROOT=~/ssplatform
+	检测成功后会把SSPLATFORM_ROOT的值追加到变量MODULE_ROOT_VALUES中，把SSPLATFORM_ROOT这个变量名追加到MODULE_ROOT_VARS中
+	
+
+	宏AK_CHECK_BUILD_DEPENDENCIES      用于决定是否递归编译依赖的模块
+	AK_CHECK_BUILD_DEPENDENCIES(default-value, dependencies)
+	e.g:
+	AK_CHECK_BUILD_DEPENDENCIES([yes], [$MODULE_ROOT_VALUES])
+	这个宏配合Makefile.am中的特定语句工作，用于决定make时是否递归到dependencies指定的目录
+	dependencies一般取值为$MODULE_ROOT_VALUES，也就是由AK_CHECK_MODULE_ROOT决定的一系列模块
+	Makefile.am中应该有如下语句：
+		SUBDIRS=@PACKAGE_DEPENDENCIES@ ...
+		export @MODULE_ROOT_VARS@
+		export BUILD_DEPENDENCIES
+	注意：最上层的configure会默认BUILD_DEPENDENCIES=yes，编译自己的依赖项。并同时阻止依赖项递归编译2级依赖项
+
+	宏AK_STD_FEATURES                  为configure添加debug optimize profile三个feature
+
+

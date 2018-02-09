@@ -1,0 +1,12 @@
+base=/search/odin/daemon/dezhoukv
+prefix=${base}
+bindir=${prefix}/_bin
+includedir=${prefix}/_include
+libdir=${prefix}/_lib
+
+Name: Dezhoukv
+Description: DezhouKV
+Version: 0.10.0
+Cflags: -I${includedir} 
+Libs: -L${libdir}
+

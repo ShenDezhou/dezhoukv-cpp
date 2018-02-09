@@ -1,0 +1,3 @@
+dezhoukv3.o: dezhoukv3.cpp ktest.h
+
+ktest.h:

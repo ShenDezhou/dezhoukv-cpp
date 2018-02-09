@@ -1,0 +1,3 @@
+[submodule "dezhoukv/murmurhash3"]
+	path = dezhoukv/murmurhash3
+	url = git://github.com/Vaizard/MurmurHash3PHP.git

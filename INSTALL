@@ -1,0 +1,13 @@
+这是一个简单的demo
+
+1.  执行./pre-build
+1.5 如果需要，用特定的参数执行./configure
+2.  执行make
+3.  执行单元测试make check
+4.  执行安装make install
+5.  执行清理make clean
+
+如果你的ACE/MySQL/db4/sqlite不在默认的地方，请参看configure的帮助
+    --with-pkg=.... 来指定位置
+    或者--without-pkg 来禁止使用某个pkg
+

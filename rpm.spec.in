@@ -1,0 +1,230 @@
+# Hardwire options here
+
+
+# ================================================================
+# determine release number
+# ================================================================
+
+%{!?__NAME: %error missing macro definition}
+%{!?__VARIANT:}
+%{!?__LONG_NAME: %error missing macro definition}
+%{!?__VERSION: %error missing macro definition}
+%{!?__URL: %error missing macro definition}
+%{!?__SVNVERSION: %global __SVNVERSION nosvn }
+
+%{!?dist: %global dist .nodist}
+
+# ================================================================
+# options
+# ================================================================
+
+%define RPM_CPPFLAGS %{?RPM_CPPFLAGS} -D_FILE_OFFSET_BITS=64
+
+%{!?skip_make: %global skip_make 0}
+%{!?skip_nosrc: %global skip_nosrc 1}
+
+# I think Mandrake sets this to .bz2, but Fedora doesn't seem to set it
+%{!?_extension:%define _extension .gz}
+
+# ================================================================
+# package
+# ================================================================
+
+# Set the version number here.
+
+Name: %{__NAME}%{__VARIANT}
+Summary: %{__LONG_NAME}
+Version: %{__VERSION}.%{__SVNVERSION}
+Release: 1%{dist} 
+Group: Development/Libraries
+URL: %{?__URL}
+License: Sogou Private License
+Vendor: Sogou Inc.
+Packager: kirbyzhou@sohu-rd.com
+Source0: %{__NAME}-%{version}.tar.gz
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+Requires(post): /sbin/install-info, /sbin/install-info
+Requires(preun):  /sbin/install-info
+Requires(postun): /sbin/ldconfig
+
+BuildRequires: libtool automake autoconf
+BuildRequires: ace-devel
+
+%if ! %skip_nosrc
+# Leave out the distro for now
+NoSource: 0
+#NoPatch:
+%endif
+
+
+%description
+
+%{!?__DESCRIPTION:%{?__URL}}
+
+# ---------------- -devel ----------------
+
+%package -n %{name}-devel
+Summary: Header files and development components for %{__LONG_NAME}
+Version: %{version}
+Group: Development/Libraries
+Requires: %{name} = %{version}-%{release}
+
+%description -n %{name}-devel
+
+This package contains the components needed for developing programs
+using %{__LONG_NAME}.
+
+# ================================================================
+# prep
+# ================================================================
+
+%prep
+
+echo target: %{_target_platform}
+echo release: %{release}
+echo skip_make: %{skip_make}
+
+%if %skip_make
+
+echo "skip make"
+
+rm -rf %{__NAME}-%{version} && ln -s %{__NAME}-%{version}-BUILT %{__NAME}-%{version} 
+%setup -D -T -n %{__NAME}-%{version}
+
+%else
+
+%setup -q -n %{__NAME}-%{version}
+
+# 64 bit platforms need some paths patched.
+%ifarch x86_64 ia64 ppc64 s390x
+%endif
+
+# ================================================================
+# build
+# ================================================================
+
+%endif
+
+%build
+
+%if %skip_make
+
+echo "build do nothing"
+
+%else
+
+[ -f configure ] || autoreconf -isv
+
+%configure
+
+%{__make} %{?_smp_mflags}
+
+%endif
+
+# ================================================================
+# install
+# ================================================================
+
+%install
+
+%{__rm} -rf %{buildroot}
+
+# make a new build root dir
+mkdir -p %{buildroot}
+
+# do install
+%makeinstall
+
+
+install -d %{buildroot}/%{_includedir}
+install -d %{buildroot}/%{_bindir}
+install -d %{buildroot}/%{_libdir}
+install -d %{buildroot}/%{_libdir}/pkgconfig
+
+echo '
+prefix=%{_prefix}
+bindir=${prefix}/bin
+includedir=${prefix}/include
+libdir=${prefix}/%{_lib}
+
+Name: %{__NAME}
+Description: %{__LONG_NAME}
+Version: %{version}
+Cflags: -I${includedir}
+Libs: -L${libdir}
+' > %{buildroot}/%{_libdir}/pkgconfig/%{__NAME}.pc
+
+# ---- build file list -----
+
+find %{buildroot}/%{_libdir}/ -xtype f -a -name '*.so.*' > runtimefiles.list
+find %{buildroot}/%{_libdir}/ -xtype f -a '(' -name '*.so' -o -name '*.a' -o -name '*.la' ')' > develfiles.list
+
+sed -i "s|^%{buildroot}||" runtimefiles.list develfiles.list
+
+%check
+make check
+
+# ================================================================
+# clean
+# ================================================================
+
+%clean
+%{__rm} -rf %{buildroot}
+
+# ================================================================
+# pre install
+# ================================================================
+
+# ......
+
+# ================================================================
+# post install
+# ================================================================
+
+%post -n %{name}
+
+/sbin/ldconfig
+
+# ================================================================
+# pre uninstall
+# ================================================================
+
+# ......
+
+# ================================================================
+# post uninstall
+# ================================================================
+
+%postun -n %{name}
+
+/sbin/ldconfig
+
+# ================================================================
+# files
+# ================================================================
+
+%files -n %{name} -f runtimefiles.list
+%defattr(-,root,root,-)
+%doc SVNVERSION
+%doc SVNINFO
+%exclude %{_datadir}/%{__NAME}/SVNVERSION
+%exclude %{_datadir}/%{__NAME}/SVNINFO
+%{_bindir}/*
+
+%files -n %{name}-devel  -f develfiles.list
+%defattr(-,root,root,-)
+%{_includedir}/*
+%{_libdir}/pkgconfig/%{__NAME}.pc
+
+# ================================================================
+# changelog
+# ================================================================
+
+%changelog
+* Wed Jan 30 2008 KirbyZhou
+- Change to template
+* Tue Sep 11 2007 KirbyZhou
+- Initial build.
+
