@@ -1,4 +1,4 @@
-base=/search/odin/daemon/dezhoukv
+base=/search/odin/daemon/dezhoukv-cpp
 prefix=${base}
 bindir=${prefix}/_bin
 includedir=${prefix}/_include
