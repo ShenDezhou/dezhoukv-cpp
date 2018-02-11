@@ -19,19 +19,17 @@ int RedisAdapter::Open()
 		pRedisContext = NULL;
 		return -1;
 	}
-  if (strlen(password.c_str()) ==0) {
-    connected = true;
-    return 0;
-  }
+  
 	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "AUTH %s", password.c_str() ); 
 	if (pRedisReply == NULL)
 		return -1;
-		int ret = -1;
+	int ret = -1;
 	if (pRedisReply->type == REDIS_REPLY_ERROR	&& strcmp(pRedisReply->str, "ERR Client sent AUTH, but no password is set") == 0)
 	{
 		ret = 0;
 		connected = true;
 	}
+ 
 	else if (pRedisReply->type != REDIS_REPLY_STATUS)
 	{
 		ret = -1;
@@ -45,7 +43,12 @@ int RedisAdapter::Open()
 	{
 		ret = -1;
 	}
+  
 	freeReplyObject(pRedisReply);
+  if (strlen(password.c_str()) ==0) {
+    connected = true;
+    return 0;
+  }
 	return ret;
 }
 
@@ -62,56 +65,80 @@ int RedisAdapter::Close()
 
 int RedisAdapter::Set(std::string key, std::string value)
 {
-	if (!pRedisContext) return -1;	
-	std::string command="SET ";
-	std::string parameter = key;
-	char *commandStr = new char[value.length()+1];
-	memset(commandStr, 0, value.length() + 1);
-	memcpy(commandStr, value.c_str(), value.length());
-	const char **commandList = new const char*[3];
-	commandList[0] = command.c_str();
-	commandList[1] = parameter.c_str();
-	commandList[2] = commandStr;
-	size_t *lengthList = new size_t[3];
-	lengthList[0]=3;
-	lengthList[1]=key.length();
-	lengthList[2]=value.length();
-    
-	redisReply *pRedisReply = (redisReply*)redisCommandArgv(pRedisContext, 3, (const char**)commandList, (const size_t*)lengthList);
-		
-	//fprintf(stderr, "RedisAdapter::Set valueis[%s] length2[%d]\n", SS_TO_ASCIIX((bchar_t*)commandList[2]), lengthList[2]);
-	if (pRedisReply == NULL){
-		fprintf(stderr, "RedisAdapter::Set NULL!\n");
-		delete [] commandStr;
-		commandStr = NULL;
-		delete [] commandList;
-		commandList = NULL;
-		delete [] lengthList;
-		lengthList = NULL;
-	    	return -1;
-	}
+	if (!pRedisContext) return -1;
+	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "SET %s %s", key.c_str(), value.c_str()); 
+	if (pRedisReply == NULL)
+		return -1;
 	int ret = -1;
-	if (pRedisReply->type != REDIS_REPLY_STATUS)
+	if (pRedisReply->type == REDIS_REPLY_NIL)
 	{
-		ret = -1;
+		ret = 0;
 	}
-	else if (strcmp(pRedisReply->str, "OK") == 0)
+	else if (pRedisReply->type == REDIS_REPLY_STRING)
 	{
+		value.assign(pRedisReply->str,  pRedisReply->len);
 		ret = 1;
-	}
+	}	
 	else
 	{
 		ret = -1;
 	}
 	freeReplyObject(pRedisReply);
-	delete [] commandStr;
-	commandStr = NULL;
-	delete [] commandList;
-	commandList = NULL;
-	delete [] lengthList;
-	lengthList = NULL;
 	return ret;
 }
+
+// int RedisAdapter::Set(std::string key, std::string value)
+// {
+//     if (!pRedisContext) return -1;  
+//     std::string command="SET ";
+//     std::string parameter = key;
+//     char *commandStr = new char[value.length()+1];
+//     memset(commandStr, 0, value.length() + 1);
+//     memcpy(commandStr, value.c_str(), value.length());
+//     const char **commandList = new const char*[3];
+//     commandList[0] = command.c_str();
+//     commandList[1] = parameter.c_str();
+//     commandList[2] = commandStr;
+//     size_t *lengthList = new size_t[3];
+//     lengthList[0]=3;
+//     lengthList[1]=key.length();
+//     lengthList[2]=value.length();
+    
+//     redisReply *pRedisReply = (redisReply*)redisCommandArgv(pRedisContext, 3, (const char**)commandList, (const size_t*)lengthList);
+        
+//     //fprintf(stderr, "RedisAdapter::Set valueis[%s] length2[%d]\n", SS_TO_ASCIIX((bchar_t*)commandList[2]), lengthList[2]);
+//     if (pRedisReply == NULL){
+//         fprintf(stderr, "RedisAdapter::Set NULL!\n");
+//         delete [] commandStr;
+//         commandStr = NULL;
+//         delete [] commandList;
+//         commandList = NULL;
+//         delete [] lengthList;
+//         lengthList = NULL;
+//             return -1;
+//     }
+//     int ret = -1;
+//     if (pRedisReply->type != REDIS_REPLY_STATUS)
+//     {
+//         ret = -1;
+//     }
+//     else if (strcmp(pRedisReply->str, "OK") == 0)
+//     {
+//         ret = 1;
+//     }
+//     else
+//     {
+//         ret = -1;
+//     }
+//     freeReplyObject(pRedisReply);
+//     delete [] commandStr;
+//     commandStr = NULL;
+//     delete [] commandList;
+//     commandList = NULL;
+//     delete [] lengthList;
+//     lengthList = NULL;
+//     return ret;
+// }
 
 int RedisAdapter::Get(std::string key, std::string &value)
 {
