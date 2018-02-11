@@ -19,7 +19,10 @@ int RedisAdapter::Open()
 		pRedisContext = NULL;
 		return -1;
 	}
-
+  if (strlen(password.c_str()) ==0) {
+    connected = true;
+    return 0;
+  }
 	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "AUTH %s", password.c_str() ); 
 	if (pRedisReply == NULL)
 		return -1;

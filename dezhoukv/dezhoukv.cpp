@@ -78,17 +78,22 @@ int main()
 	const int64_t A1 = -10000000000ll;
 	const int64_t B1 =   1000000000ll;
 	const int64_t C1 =   5000000000ll;
+	const char* hdd_ip = "39.104.63.175";
 	for(int i=0; i<1 ; i++) {
 		printf("%016llx\t",result);
 	}
+  char z;
 	if ( A1 < result && result <=0) {
 		printf("i\n");
+    z='i';
 	} 
 	if ( 0 < result && result <= B1) {
 		printf("j\n");
+    z='j';
 	}
 	if ( B1 < result && result <= C1) {
 		printf("k\n");
+    z='k';
 	}
 	boost::bloom_filters::dynamic_counting_bloom_filter<int64_t, 2 > bloom;
 	for (size_t i = 0; i < 1; ++i) {
@@ -113,11 +118,12 @@ int main()
 	for(int64_t i = 0; i < thread_num; i++)
 	{
 		backends[i] = i;
-		redis_[i] = new RedisAdapter("127.0.0.1", 10100 + i);
+		redis_[i] = new RedisAdapter(hdd_ip, 10100 + i);
 		int b = redis_[i] -> Open();
-		printf("port %d, open %d", 10110+i, b);
+		printf("port %d, open %d", 10100+i, b);
 		backends[i] = (int64_t)redis_[i];
 	}
+  printf("\n");
 	Lanton_t *lanton = new_lanton(backends, thread_num, DEFAULT_LOOKUPTABLE_SIZE);
 	for(int64_t i = 0; i < thread_num; i++)
         {
@@ -130,6 +136,25 @@ int main()
                 hyperll.update(result);
         }
 	printf("estimate distinct key:%.1d\n", hyperll.raw_estimate());
-
-
+  std::string value;
+  int has_result = ((RedisAdapter*)endpoint)->Get("key:000000059611",value);
+  printf("Got:%s",value.c_str());
+  // #
+  const double D1 = 0.03378;
+	const double E1 = 0.1009;
+	const double F1 = 1.0;
+  if ( hyperll.raw_estimate() < D1 * BASE ) {
+    return has_result;
+  }
+  if ( hyperll.raw_estimate() > D1 * BASE && hyperll.raw_estimate() < E1 * BASE
+    && z=='i' || z=='j'
+  ) {
+    // 二次回捞
+  }
+  if ( hyperll.raw_estimate() > E1 * BASE && hyperll.raw_estimate() < F1 * BASE && z=='i' ) {
+    // 三次回捞
+  }
+  if (has_result)
+    return 1;
+  return 0;
 }
