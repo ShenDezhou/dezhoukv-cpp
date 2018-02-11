@@ -20,36 +20,36 @@ int RedisAdapter::Open()
 		return -1;
 	}
   
-	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "AUTH %s", password.c_str() ); 
-	if (pRedisReply == NULL)
-		return -1;
-	int ret = -1;
-	if (pRedisReply->type == REDIS_REPLY_ERROR	&& strcmp(pRedisReply->str, "ERR Client sent AUTH, but no password is set") == 0)
-	{
-		ret = 0;
-		connected = true;
-	}
- 
-	else if (pRedisReply->type != REDIS_REPLY_STATUS)
-	{
-		ret = -1;
-	}
-	else if (strcmp(pRedisReply->str, "OK") == 0)
-	{
-		ret = 0;
-		connected = true;
-	}
-	else
-	{
-		ret = -1;
-	}
+//	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "AUTH %s", password.c_str() ); 
+//	if (pRedisReply == NULL)
+//		return -1;
+//	int ret = -1;
+//	if (pRedisReply->type == REDIS_REPLY_ERROR	&& strcmp(pRedisReply->str, "ERR Client sent AUTH, but no password is set") == 0)
+//	{
+//		ret = 0;
+//		connected = true;
+//	}
+
+//	else if (pRedisReply->type != REDIS_REPLY_STATUS)
+//	{
+//		ret = -1;
+//	}
+//	else if (strcmp(pRedisReply->str, "OK") == 0)
+//	{
+//		ret = 0;
+//		connected = true;
+//	}
+//	else
+//	{
+//		ret = -1;
+//	}
   
-	freeReplyObject(pRedisReply);
-  if (strlen(password.c_str()) ==0) {
-    connected = true;
-    return 0;
-  }
-	return ret;
+//	freeReplyObject(pRedisReply);
+//  if (strlen(password.c_str()) ==0) {
+//   connected = true;
+//    return 0;
+//  }
+	return 0;
 }
 
 int RedisAdapter::Close()
@@ -66,7 +66,7 @@ int RedisAdapter::Close()
 int RedisAdapter::Set(std::string key, std::string value)
 {
 	if (!pRedisContext) return -1;
-	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "SET %s %s", key.c_str(), value.c_str()); 
+	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "SET %b %b", key.c_str(), key.size(), value.c_str(), value.size()); 
 	if (pRedisReply == NULL)
 		return -1;
 	int ret = -1;
@@ -76,7 +76,6 @@ int RedisAdapter::Set(std::string key, std::string value)
 	}
 	else if (pRedisReply->type == REDIS_REPLY_STRING)
 	{
-		value.assign(pRedisReply->str,  pRedisReply->len);
 		ret = 1;
 	}	
 	else
@@ -143,7 +142,7 @@ int RedisAdapter::Set(std::string key, std::string value)
 int RedisAdapter::Get(std::string key, std::string &value)
 {
 	if (!pRedisContext) return -1;
-	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "GET %s", key.c_str() ); 
+	redisReply *pRedisReply = (redisReply*)redisCommand(pRedisContext, "GET %b", key.c_str(), key.size() ); 
 	if (pRedisReply == NULL)
 		return -1;
 	int ret = -1;
