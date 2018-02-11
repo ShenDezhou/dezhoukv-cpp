@@ -92,16 +92,48 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
+libbloomfilter_la_LIBADD =
+am_libbloomfilter_la_OBJECTS =
+libbloomfilter_la_OBJECTS = $(am_libbloomfilter_la_OBJECTS)
+libbloomfilter_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(libbloomfilter_la_LDFLAGS) $(LDFLAGS) -o $@
 libdezhoukv2_la_LIBADD =
 am_libdezhoukv2_la_OBJECTS = dezhoukv2.lo
 libdezhoukv2_la_OBJECTS = $(am_libdezhoukv2_la_OBJECTS)
 libdezhoukv2_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libdezhoukv2_la_LDFLAGS) $(LDFLAGS) -o $@
+libhyperloglog_la_LIBADD =
+am_libhyperloglog_la_OBJECTS =
+libhyperloglog_la_OBJECTS = $(am_libhyperloglog_la_OBJECTS)
+libhyperloglog_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(libhyperloglog_la_LDFLAGS) $(LDFLAGS) -o $@
+libmaglev_la_LIBADD =
+am_libmaglev_la_OBJECTS = csiphash.lo Lanton.lo
+libmaglev_la_OBJECTS = $(am_libmaglev_la_OBJECTS)
+libmaglev_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(libmaglev_la_LDFLAGS) $(LDFLAGS) -o $@
+libmurmurhash3_la_LIBADD =
+am_libmurmurhash3_la_OBJECTS = MurmurHash3.lo
+libmurmurhash3_la_OBJECTS = $(am_libmurmurhash3_la_OBJECTS)
+libmurmurhash3_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(libmurmurhash3_la_LDFLAGS) $(LDFLAGS) -o $@
+libredisio_la_LIBADD =
+am_libredisio_la_OBJECTS = redis_client.lo
+libredisio_la_OBJECTS = $(am_libredisio_la_OBJECTS)
+libredisio_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(libredisio_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-am_dezhoukv_OBJECTS = dezhoukv.$(OBJEXT) stdafx.$(OBJEXT)
+am_dezhoukv_OBJECTS = dezhoukv-dezhoukv.$(OBJEXT) \
+	dezhoukv-stdafx.$(OBJEXT)
 dezhoukv_OBJECTS = $(am_dezhoukv_OBJECTS)
-dezhoukv_DEPENDENCIES = libdezhoukv2.la
+dezhoukv_DEPENDENCIES = libdezhoukv2.la libmurmurhash3.la \
+	libbloomfilter.la libmaglev.la libredisio.la
 am_dezhoukvtest_OBJECTS = dezhoukvtest.$(OBJEXT)
 dezhoukvtest_OBJECTS = $(am_dezhoukvtest_OBJECTS)
 dezhoukvtest_DEPENDENCIES = libdezhoukv2.la
@@ -112,15 +144,6 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/_aux/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-CXXLD = $(CXX)
-CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -130,12 +153,25 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libdezhoukv3_a_SOURCES) $(libdezhoukv2_la_SOURCES) \
-	$(dezhoukv_SOURCES) $(dezhoukvtest_SOURCES) \
-	$(dezhoukvtest2_SOURCES)
-DIST_SOURCES = $(libdezhoukv3_a_SOURCES) $(libdezhoukv2_la_SOURCES) \
-	$(dezhoukv_SOURCES) $(dezhoukvtest_SOURCES) \
-	$(dezhoukvtest2_SOURCES)
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+SOURCES = $(libdezhoukv3_a_SOURCES) $(libbloomfilter_la_SOURCES) \
+	$(libdezhoukv2_la_SOURCES) $(libhyperloglog_la_SOURCES) \
+	$(libmaglev_la_SOURCES) $(libmurmurhash3_la_SOURCES) \
+	$(libredisio_la_SOURCES) $(dezhoukv_SOURCES) \
+	$(dezhoukvtest_SOURCES) $(dezhoukvtest2_SOURCES)
+DIST_SOURCES = $(libdezhoukv3_a_SOURCES) $(libbloomfilter_la_SOURCES) \
+	$(libdezhoukv2_la_SOURCES) $(libhyperloglog_la_SOURCES) \
+	$(libmaglev_la_SOURCES) $(libmurmurhash3_la_SOURCES) \
+	$(libredisio_la_SOURCES) $(dezhoukv_SOURCES) \
+	$(dezhoukvtest_SOURCES) $(dezhoukvtest2_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -311,20 +347,30 @@ collectHEADERS_T = \
 	$(addprefix $(collectinclude_DIR)/$(PACKAGE)/, $(nobase_pkginclude_HEADERS))
 
 dezhoukv_SOURCES = dezhoukv.cpp stdafx.cpp stdafx.h 
-dezhoukv_LDADD = libdezhoukv2.la
+dezhoukv_LDADD = libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la
 #dezhoukv_LDADD=libdezhoukv2.la @db4_LDADD@
 
 # Custom flags
 #dezhoukv_LDADD=-lz
-#dezhoukv_CPPFLAGS=$(AM_CPPFLAGS) -I$(top_srcdir)/module2
+dezhoukv_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_srcdir)/dezhoukv/maglev/ 
 #dezhoukv_LDFLAGS=$(AM_LDFLAGS)
 #dezhoukv_CFLAGS=$(AM_CFLAGS) -O3 
 #dezhoukv_CXXFLAGS=$(AM_CXXFLAGS) -g
 
 #for dynamic libarary
-lib_LTLIBRARIES = libdezhoukv2.la
-libdezhoukv2_la_SOURCES = dezhoukv2.cpp ktest.h
-libdezhoukv2_la_LDFLAGS = -version-number 0:5:$(SVNVERSION)
+lib_LTLIBRARIES = libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libhyperloglog.la libredisio.la
+libdezhoukv2_la_SOURCES = dezhoukv2.cpp ktest.h 
+libdezhoukv2_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) -lhiredis -lboost_system -Ibloomfilters/
+libmurmurhash3_la_SOURCES = murmurhash3/MurmurHash3.cpp murmurhash3/MurmurHash3.h
+libmurmurhash3_la_LDFLAGS = -version-number 0:5:$(SVNVERSION)
+libbloomfilter_la_SOURCES = bloomfilters/boost/bloom_filter/basic_bloom_filter.hpp
+libbloomfilter_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) 
+libmaglev_la_SOURCES = maglev/src/csiphash.c maglev/src/Lanton.c
+libmaglev_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) -Imaglev/include/
+libhyperloglog_la_SOURCES = hyperloglog/hyperloglog.h
+libhyperloglog_la_LDFLAGS = -version-number 0:5:$(SVNVERSION)
+libredisio_la_SOURCES = redisio/redis_client.cpp redisio/redis_client.h
+libredisio_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) -lhiredis 
 
 #for static libraray
 noinst_LIBRARIES = libdezhoukv3.a
@@ -337,7 +383,7 @@ all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .cpp .lo .o .obj
+.SUFFIXES: .c .cpp .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/common.mk $(top_srcdir)/common-rules.mk $(top_srcdir)/collect.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -406,8 +452,18 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
+libbloomfilter.la: $(libbloomfilter_la_OBJECTS) $(libbloomfilter_la_DEPENDENCIES) 
+	$(libbloomfilter_la_LINK) -rpath $(libdir) $(libbloomfilter_la_OBJECTS) $(libbloomfilter_la_LIBADD) $(LIBS)
 libdezhoukv2.la: $(libdezhoukv2_la_OBJECTS) $(libdezhoukv2_la_DEPENDENCIES) 
 	$(libdezhoukv2_la_LINK) -rpath $(libdir) $(libdezhoukv2_la_OBJECTS) $(libdezhoukv2_la_LIBADD) $(LIBS)
+libhyperloglog.la: $(libhyperloglog_la_OBJECTS) $(libhyperloglog_la_DEPENDENCIES) 
+	$(libhyperloglog_la_LINK) -rpath $(libdir) $(libhyperloglog_la_OBJECTS) $(libhyperloglog_la_LIBADD) $(LIBS)
+libmaglev.la: $(libmaglev_la_OBJECTS) $(libmaglev_la_DEPENDENCIES) 
+	$(libmaglev_la_LINK) -rpath $(libdir) $(libmaglev_la_OBJECTS) $(libmaglev_la_LIBADD) $(LIBS)
+libmurmurhash3.la: $(libmurmurhash3_la_OBJECTS) $(libmurmurhash3_la_DEPENDENCIES) 
+	$(libmurmurhash3_la_LINK) -rpath $(libdir) $(libmurmurhash3_la_OBJECTS) $(libmurmurhash3_la_LIBADD) $(LIBS)
+libredisio.la: $(libredisio_la_OBJECTS) $(libredisio_la_DEPENDENCIES) 
+	$(libredisio_la_LINK) -rpath $(libdir) $(libredisio_la_OBJECTS) $(libredisio_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
@@ -476,11 +532,50 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Lanton.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MurmurHash3.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/csiphash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv-dezhoukv.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv-stdafx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvtest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stdafx.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/redis_client.Plo@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+csiphash.lo: maglev/src/csiphash.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT csiphash.lo -MD -MP -MF $(DEPDIR)/csiphash.Tpo -c -o csiphash.lo `test -f 'maglev/src/csiphash.c' || echo '$(srcdir)/'`maglev/src/csiphash.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/csiphash.Tpo $(DEPDIR)/csiphash.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='maglev/src/csiphash.c' object='csiphash.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o csiphash.lo `test -f 'maglev/src/csiphash.c' || echo '$(srcdir)/'`maglev/src/csiphash.c
+
+Lanton.lo: maglev/src/Lanton.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT Lanton.lo -MD -MP -MF $(DEPDIR)/Lanton.Tpo -c -o Lanton.lo `test -f 'maglev/src/Lanton.c' || echo '$(srcdir)/'`maglev/src/Lanton.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/Lanton.Tpo $(DEPDIR)/Lanton.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='maglev/src/Lanton.c' object='Lanton.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o Lanton.lo `test -f 'maglev/src/Lanton.c' || echo '$(srcdir)/'`maglev/src/Lanton.c
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -502,6 +597,48 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+MurmurHash3.lo: murmurhash3/MurmurHash3.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MurmurHash3.lo -MD -MP -MF $(DEPDIR)/MurmurHash3.Tpo -c -o MurmurHash3.lo `test -f 'murmurhash3/MurmurHash3.cpp' || echo '$(srcdir)/'`murmurhash3/MurmurHash3.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MurmurHash3.Tpo $(DEPDIR)/MurmurHash3.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='murmurhash3/MurmurHash3.cpp' object='MurmurHash3.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MurmurHash3.lo `test -f 'murmurhash3/MurmurHash3.cpp' || echo '$(srcdir)/'`murmurhash3/MurmurHash3.cpp
+
+redis_client.lo: redisio/redis_client.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT redis_client.lo -MD -MP -MF $(DEPDIR)/redis_client.Tpo -c -o redis_client.lo `test -f 'redisio/redis_client.cpp' || echo '$(srcdir)/'`redisio/redis_client.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/redis_client.Tpo $(DEPDIR)/redis_client.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='redisio/redis_client.cpp' object='redis_client.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o redis_client.lo `test -f 'redisio/redis_client.cpp' || echo '$(srcdir)/'`redisio/redis_client.cpp
+
+dezhoukv-dezhoukv.o: dezhoukv.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukv-dezhoukv.o -MD -MP -MF $(DEPDIR)/dezhoukv-dezhoukv.Tpo -c -o dezhoukv-dezhoukv.o `test -f 'dezhoukv.cpp' || echo '$(srcdir)/'`dezhoukv.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukv-dezhoukv.Tpo $(DEPDIR)/dezhoukv-dezhoukv.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dezhoukv.cpp' object='dezhoukv-dezhoukv.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukv-dezhoukv.o `test -f 'dezhoukv.cpp' || echo '$(srcdir)/'`dezhoukv.cpp
+
+dezhoukv-dezhoukv.obj: dezhoukv.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukv-dezhoukv.obj -MD -MP -MF $(DEPDIR)/dezhoukv-dezhoukv.Tpo -c -o dezhoukv-dezhoukv.obj `if test -f 'dezhoukv.cpp'; then $(CYGPATH_W) 'dezhoukv.cpp'; else $(CYGPATH_W) '$(srcdir)/dezhoukv.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukv-dezhoukv.Tpo $(DEPDIR)/dezhoukv-dezhoukv.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dezhoukv.cpp' object='dezhoukv-dezhoukv.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukv-dezhoukv.obj `if test -f 'dezhoukv.cpp'; then $(CYGPATH_W) 'dezhoukv.cpp'; else $(CYGPATH_W) '$(srcdir)/dezhoukv.cpp'; fi`
+
+dezhoukv-stdafx.o: stdafx.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukv-stdafx.o -MD -MP -MF $(DEPDIR)/dezhoukv-stdafx.Tpo -c -o dezhoukv-stdafx.o `test -f 'stdafx.cpp' || echo '$(srcdir)/'`stdafx.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukv-stdafx.Tpo $(DEPDIR)/dezhoukv-stdafx.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='stdafx.cpp' object='dezhoukv-stdafx.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukv-stdafx.o `test -f 'stdafx.cpp' || echo '$(srcdir)/'`stdafx.cpp
+
+dezhoukv-stdafx.obj: stdafx.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukv-stdafx.obj -MD -MP -MF $(DEPDIR)/dezhoukv-stdafx.Tpo -c -o dezhoukv-stdafx.obj `if test -f 'stdafx.cpp'; then $(CYGPATH_W) 'stdafx.cpp'; else $(CYGPATH_W) '$(srcdir)/stdafx.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukv-stdafx.Tpo $(DEPDIR)/dezhoukv-stdafx.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='stdafx.cpp' object='dezhoukv-stdafx.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukv-stdafx.obj `if test -f 'stdafx.cpp'; then $(CYGPATH_W) 'stdafx.cpp'; else $(CYGPATH_W) '$(srcdir)/stdafx.cpp'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

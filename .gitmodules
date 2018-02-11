@@ -1,3 +1,15 @@
 [submodule "dezhoukv/murmurhash3"]
 	path = dezhoukv/murmurhash3
 	url = git://github.com/Vaizard/MurmurHash3PHP.git
+[submodule "dezhoukv/bloomfilters"]
+	path = dezhoukv/bloomfilters
+	url = https://github.com/queertypes/boost-bloom-filters
+[submodule "dezhoukv/maglev"]
+	path = dezhoukv/maglev
+	url = git://github.com/blingblingTQ/Lanton
+[submodule "dezhou/hyperloglog"]
+	path = dezhou/hyperloglog
+	url = git://github.com/rtdavis22/hyperloglog
+[submodule "dezhoukv/hyperloglog"]
+	path = dezhoukv/hyperloglog
+	url = git://github.com/rtdavis22/hyperloglog
