@@ -15,6 +15,7 @@ Copyright (c) 2018-2019 Dezhou Shen,  Tsinghua
 #include "dezhoukv.h"
 
 #include <murmurhash3/MurmurHash3.h>
+#include <boost/bloom_filter/hash/murmurhash3.hpp>
 #include <boost/bloom_filter/dynamic_counting_bloom_filter.hpp>
 #include <maglev/include/Lanton.h>
 #include <hyperloglog/hyperloglog.h>
@@ -32,7 +33,8 @@ Copyright (c) 2018-2019 Dezhou Shen,  Tsinghua
 RedisAdapter* *redis_mem;
 RedisAdapter* *redis_ssd;
 RedisAdapter* *redis_hdd;
-boost::bloom_filters::dynamic_counting_bloom_filter<int64_t, 2>  bloom;
+typedef boost::mpl::vector<boost::bloom_filters::murmurhash3<uint64_t, 0> > murmurhash3_hash;
+boost::bloom_filters::dynamic_counting_bloom_filter<uint64_t, 32, murmurhash3_hash, uint64_t>  bloom;
 Lanton_t* lanton[3];
 HyperLogLog hyperll(4ll);
 
@@ -137,11 +139,12 @@ int init_hdd() {
 int get(const char* key,  std::string &value) {
     printf("Get %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
     char out[17];
+    double start = get_time();
     MurmurHash3_x64_128(key, strlen(key), 0, out);
     int64_t hash  = ((int64_t*)out)[0] ^ ((int64_t*)out)[1];
     int64_t result  =  hash % BASE + OFFSET;
     for (int i = 0; i < 1 ; i++) {
-        printf("hashed:%016llx\t", result);
+        printf("hashed:%016llx,t=%f\t", result,  get_time()-start);
     }
     char z;
     if ( A1  <  result && result  <= 0 ) {
@@ -160,19 +163,23 @@ int get(const char* key,  std::string &value) {
         printf("Error\n");
         exit(-1);
     }
+    start = get_time();
     if (bloom.probably_contains(result)) {
       for (size_t i  =  0; i  <  1; ++i) {
-            printf("false positive rate:%.4f\n", bloom.false_positive_rate());
+            printf("false positive rate:%.4f,t=%f\n", bloom.false_positive_rate(), get_time()-start);
       }
     int choose  =  z-'i';
+    start = get_time();
     double current_count  =  hyperll.raw_estimate();
-    printf("estimate distinct key:%.1d\n",  current_count);
+    printf("estimate distinct key:%.1f,t=%f\n",  current_count, get_time()-start);
     if ( current_count  <  D1 * BASE ) {
         printf("max_possible requests:1\n");
+        start = get_time();
         int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
-        printf("Endpoint :%016llx\n",  endpoint);
+        printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
+        double start = get_time();
         int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
-        printf("Got:%s\n", value.c_str());
+        printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
         if (has_result)
             return has_result;
     }
@@ -181,8 +188,9 @@ int get(const char* key,  std::string &value) {
         for (size_t i  =  0; i  <  2; ++i) {
           int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
           printf("Endpoint :%016llx\n",  endpoint);
+          double start = get_time();
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
-          printf("Got:%s\n", value.c_str());
+          printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
           if (has_result)
             return has_result;
           if( (char)(z+i) < 'k' ) {
@@ -196,8 +204,9 @@ int get(const char* key,  std::string &value) {
         for (size_t i  =  0; i  <  3; ++i) {
           int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
           printf("Endpoint :%016llx\n",  endpoint);
+          double start = get_time();
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
-          printf("Got:%s\n", value.c_str());
+          printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
           if (has_result)
             return has_result;
           if( (char)(z+i) < 'k' ) {
@@ -215,7 +224,7 @@ int set(const char* key,  std::string value) {
     char out[17];
     MurmurHash3_x64_128(key, strlen(key), 0, out);
     int64_t hash  = ((int64_t*)out)[0] ^ ((int64_t*)out)[1];
-    int64_t result  =  (int64_t)(hash % BASE) + OFFSET;
+    int64_t result  =  hash % BASE + OFFSET;
     for (int i = 0; i < 1 ; i++) {
         printf("hashed:%016llx\t", result);
     }

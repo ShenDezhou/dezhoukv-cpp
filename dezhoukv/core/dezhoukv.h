@@ -38,12 +38,12 @@ extern "C"
 {
 #endif
 
-const uint64_t BASE   = 15000000000llu;
-const int64_t OFFSET = -7500000000ll;
-const int64_t A1 = -10000000000ll;
-const int64_t B1 =   1000000000ll;
-const int64_t C1 =   5000000000ll;
-const char* mem_ip = "39.104.58.183";
+const uint64_t BASE   =  7500000000ll;
+const int64_t OFFSET  = -2500000000ll;
+const int64_t A1     = -10000000000ll;
+const int64_t B1     =   1000000000ll;
+const int64_t C1     =   5000000000ll;
+const char* mem_ip = "10.134.100.140";
 const char* ssd_ip = "10.134.110.46";
 const char* hdd_ip = "39.104.63.175";
 const double D1 = 0.03378;
@@ -60,6 +60,15 @@ inline int init() {
   init_ssd();
   init_hdd();
 }
+
+#include <sys/time.h>
+
+inline double get_time() {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec + (tv.tv_usec / 1e6);
+}
+
 int get(const char* key, std::string &value);
 int set(const char* key, std::string value);
 
