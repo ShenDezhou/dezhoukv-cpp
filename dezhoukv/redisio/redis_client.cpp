@@ -70,18 +70,15 @@ int RedisAdapter::Set(std::string key, std::string value)
 	if (pRedisReply == NULL)
 		return -1;
 	int ret = -1;
-	if (pRedisReply->type == REDIS_REPLY_NIL)
-	{
-		ret = 0;
-	}
-	else if (pRedisReply->type == REDIS_REPLY_STRING)
-	{
-		ret = 1;
-	}	
-	else
-	{
-		ret = -1;
-	}
+	if (pRedisReply->type != REDIS_REPLY_STATUS) {
+      ret = -1;
+  }
+  else if (strcmp(pRedisReply->str, "OK") == 0) {
+      ret = 1;
+  }
+  else {
+      ret = -1;
+  }
 	freeReplyObject(pRedisReply);
 	return ret;
 }

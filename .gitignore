@@ -35,3 +35,6 @@
 _lib/
 .libs/
 .deps/
+
+dezhoukv/.libs
+dezhoukv/.deps
