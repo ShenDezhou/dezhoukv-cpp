@@ -14,9 +14,9 @@ dezhoukv_CPPFLAGS=$(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_
 #dezhoukv_CXXFLAGS=$(AM_CXXFLAGS) -g
 
 #for dynamic libarary
-lib_LTLIBRARIES=libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libhyperloglog.la libredisio.la
+lib_LTLIBRARIES=libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libhyperloglog.la libredisio.la libdezhoukvcore.la
 libdezhoukv2_la_SOURCES=dezhoukv2.cpp ktest.h 
-libdezhoukv2_la_LDFLAGS=-version-number 0:5:$(SVNVERSION) -lhiredis -lboost_system -Ibloomfilters/
+libdezhoukv2_la_LDFLAGS=-version-number 0:5:$(SVNVERSION) -lhiredis -lboost_system
 
 libmurmurhash3_la_SOURCES=murmurhash3/MurmurHash3.cpp murmurhash3/MurmurHash3.h
 libmurmurhash3_la_LDFLAGS=-version-number 0:5:$(SVNVERSION)
@@ -33,6 +33,10 @@ libhyperloglog_la_LDFLAGS=-version-number 0:5:$(SVNVERSION)
 libredisio_la_SOURCES=redisio/redis_client.cpp redisio/redis_client.h
 libredisio_la_LDFLAGS=-version-number 0:5:$(SVNVERSION) -lhiredis 
 
+libdezhoukvcore_la_SOURCES=core/dezhoukv.cpp
+libdezhoukvcore_la_LDFLAGS=-version-number 0:5:$(SVNVERSION) libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la
+libdezhoukvcore_la_CPPFLAGS=$(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/ -I$(top_srcdir)/dezhoukv/bloomfilters/
+
 #for static libraray
 noinst_LIBRARIES=libdezhoukv3.a
 libdezhoukv3_a_SOURCES=dezhoukv3.cpp ktest.h
@@ -46,10 +50,10 @@ XFAIL_TESTS=dezhoukvtest2
 noinst_PROGRAMS=dezhoukvtest dezhoukvtest2
 
 dezhoukvtest_SOURCES=dezhoukvtest.cpp ktest.h
-dezhoukvtest_LDADD=libdezhoukv2.la
+dezhoukvtest_LDADD=libdezhoukv2.la libdezhoukvcore.la
 
 dezhoukvtest2_SOURCES=dezhoukvtest.cpp
-dezhoukvtest2_LDADD=libdezhoukv3.a
+dezhoukvtest2_LDADD=libdezhoukv3.a libdezhoukvcore.la
 
 # include $(top_srcdir)/util-gch-dbg.mk
 # 

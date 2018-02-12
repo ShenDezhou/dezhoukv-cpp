@@ -104,6 +104,12 @@ libdezhoukv2_la_OBJECTS = $(am_libdezhoukv2_la_OBJECTS)
 libdezhoukv2_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libdezhoukv2_la_LDFLAGS) $(LDFLAGS) -o $@
+libdezhoukvcore_la_LIBADD =
+am_libdezhoukvcore_la_OBJECTS = libdezhoukvcore_la-dezhoukv.lo
+libdezhoukvcore_la_OBJECTS = $(am_libdezhoukvcore_la_OBJECTS)
+libdezhoukvcore_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(libdezhoukvcore_la_LDFLAGS) $(LDFLAGS) -o $@
 libhyperloglog_la_LIBADD =
 am_libhyperloglog_la_OBJECTS =
 libhyperloglog_la_OBJECTS = $(am_libhyperloglog_la_OBJECTS)
@@ -136,10 +142,10 @@ dezhoukv_DEPENDENCIES = libdezhoukv2.la libmurmurhash3.la \
 	libbloomfilter.la libmaglev.la libredisio.la
 am_dezhoukvtest_OBJECTS = dezhoukvtest.$(OBJEXT)
 dezhoukvtest_OBJECTS = $(am_dezhoukvtest_OBJECTS)
-dezhoukvtest_DEPENDENCIES = libdezhoukv2.la
+dezhoukvtest_DEPENDENCIES = libdezhoukv2.la libdezhoukvcore.la
 am_dezhoukvtest2_OBJECTS = dezhoukvtest.$(OBJEXT)
 dezhoukvtest2_OBJECTS = $(am_dezhoukvtest2_OBJECTS)
-dezhoukvtest2_DEPENDENCIES = libdezhoukv3.a
+dezhoukvtest2_DEPENDENCIES = libdezhoukv3.a libdezhoukvcore.la
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/_aux/depcomp
 am__depfiles_maybe = depfiles
@@ -163,15 +169,17 @@ CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libdezhoukv3_a_SOURCES) $(libbloomfilter_la_SOURCES) \
-	$(libdezhoukv2_la_SOURCES) $(libhyperloglog_la_SOURCES) \
-	$(libmaglev_la_SOURCES) $(libmurmurhash3_la_SOURCES) \
-	$(libredisio_la_SOURCES) $(dezhoukv_SOURCES) \
-	$(dezhoukvtest_SOURCES) $(dezhoukvtest2_SOURCES)
+	$(libdezhoukv2_la_SOURCES) $(libdezhoukvcore_la_SOURCES) \
+	$(libhyperloglog_la_SOURCES) $(libmaglev_la_SOURCES) \
+	$(libmurmurhash3_la_SOURCES) $(libredisio_la_SOURCES) \
+	$(dezhoukv_SOURCES) $(dezhoukvtest_SOURCES) \
+	$(dezhoukvtest2_SOURCES)
 DIST_SOURCES = $(libdezhoukv3_a_SOURCES) $(libbloomfilter_la_SOURCES) \
-	$(libdezhoukv2_la_SOURCES) $(libhyperloglog_la_SOURCES) \
-	$(libmaglev_la_SOURCES) $(libmurmurhash3_la_SOURCES) \
-	$(libredisio_la_SOURCES) $(dezhoukv_SOURCES) \
-	$(dezhoukvtest_SOURCES) $(dezhoukvtest2_SOURCES)
+	$(libdezhoukv2_la_SOURCES) $(libdezhoukvcore_la_SOURCES) \
+	$(libhyperloglog_la_SOURCES) $(libmaglev_la_SOURCES) \
+	$(libmurmurhash3_la_SOURCES) $(libredisio_la_SOURCES) \
+	$(dezhoukv_SOURCES) $(dezhoukvtest_SOURCES) \
+	$(dezhoukvtest2_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -358,9 +366,9 @@ dezhoukv_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(to
 #dezhoukv_CXXFLAGS=$(AM_CXXFLAGS) -g
 
 #for dynamic libarary
-lib_LTLIBRARIES = libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libhyperloglog.la libredisio.la
+lib_LTLIBRARIES = libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libhyperloglog.la libredisio.la libdezhoukvcore.la
 libdezhoukv2_la_SOURCES = dezhoukv2.cpp ktest.h 
-libdezhoukv2_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) -lhiredis -lboost_system -Ibloomfilters/
+libdezhoukv2_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) -lhiredis -lboost_system
 libmurmurhash3_la_SOURCES = murmurhash3/MurmurHash3.cpp murmurhash3/MurmurHash3.h
 libmurmurhash3_la_LDFLAGS = -version-number 0:5:$(SVNVERSION)
 libbloomfilter_la_SOURCES = bloomfilters/boost/bloom_filter/basic_bloom_filter.hpp
@@ -371,14 +379,17 @@ libhyperloglog_la_SOURCES = hyperloglog/hyperloglog.h
 libhyperloglog_la_LDFLAGS = -version-number 0:5:$(SVNVERSION)
 libredisio_la_SOURCES = redisio/redis_client.cpp redisio/redis_client.h
 libredisio_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) -lhiredis 
+libdezhoukvcore_la_SOURCES = core/dezhoukv.cpp
+libdezhoukvcore_la_LDFLAGS = -version-number 0:5:$(SVNVERSION) libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la
+libdezhoukvcore_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/ -I$(top_srcdir)/dezhoukv/bloomfilters/
 
 #for static libraray
 noinst_LIBRARIES = libdezhoukv3.a
 libdezhoukv3_a_SOURCES = dezhoukv3.cpp ktest.h
 dezhoukvtest_SOURCES = dezhoukvtest.cpp ktest.h
-dezhoukvtest_LDADD = libdezhoukv2.la
+dezhoukvtest_LDADD = libdezhoukv2.la libdezhoukvcore.la
 dezhoukvtest2_SOURCES = dezhoukvtest.cpp
-dezhoukvtest2_LDADD = libdezhoukv3.a
+dezhoukvtest2_LDADD = libdezhoukv3.a libdezhoukvcore.la
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -456,6 +467,8 @@ libbloomfilter.la: $(libbloomfilter_la_OBJECTS) $(libbloomfilter_la_DEPENDENCIES
 	$(libbloomfilter_la_LINK) -rpath $(libdir) $(libbloomfilter_la_OBJECTS) $(libbloomfilter_la_LIBADD) $(LIBS)
 libdezhoukv2.la: $(libdezhoukv2_la_OBJECTS) $(libdezhoukv2_la_DEPENDENCIES) 
 	$(libdezhoukv2_la_LINK) -rpath $(libdir) $(libdezhoukv2_la_OBJECTS) $(libdezhoukv2_la_LIBADD) $(LIBS)
+libdezhoukvcore.la: $(libdezhoukvcore_la_OBJECTS) $(libdezhoukvcore_la_DEPENDENCIES) 
+	$(libdezhoukvcore_la_LINK) -rpath $(libdir) $(libdezhoukvcore_la_OBJECTS) $(libdezhoukvcore_la_LIBADD) $(LIBS)
 libhyperloglog.la: $(libhyperloglog_la_OBJECTS) $(libhyperloglog_la_DEPENDENCIES) 
 	$(libhyperloglog_la_LINK) -rpath $(libdir) $(libhyperloglog_la_OBJECTS) $(libhyperloglog_la_LIBADD) $(LIBS)
 libmaglev.la: $(libmaglev_la_OBJECTS) $(libmaglev_la_DEPENDENCIES) 
@@ -540,6 +553,7 @@ include ./$(DEPDIR)/dezhoukv-stdafx.Po
 include ./$(DEPDIR)/dezhoukv2.Plo
 include ./$(DEPDIR)/dezhoukv3.Po
 include ./$(DEPDIR)/dezhoukvtest.Po
+include ./$(DEPDIR)/libdezhoukvcore_la-dezhoukv.Plo
 include ./$(DEPDIR)/redis_client.Plo
 
 .c.o:
@@ -597,6 +611,13 @@ Lanton.lo: maglev/src/Lanton.c
 #	source='$<' object='$@' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
 #	$(LTCXXCOMPILE) -c -o $@ $<
+
+libdezhoukvcore_la-dezhoukv.lo: core/dezhoukv.cpp
+	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libdezhoukvcore_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libdezhoukvcore_la-dezhoukv.lo -MD -MP -MF $(DEPDIR)/libdezhoukvcore_la-dezhoukv.Tpo -c -o libdezhoukvcore_la-dezhoukv.lo `test -f 'core/dezhoukv.cpp' || echo '$(srcdir)/'`core/dezhoukv.cpp
+	$(am__mv) $(DEPDIR)/libdezhoukvcore_la-dezhoukv.Tpo $(DEPDIR)/libdezhoukvcore_la-dezhoukv.Plo
+#	source='core/dezhoukv.cpp' object='libdezhoukvcore_la-dezhoukv.lo' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libdezhoukvcore_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libdezhoukvcore_la-dezhoukv.lo `test -f 'core/dezhoukv.cpp' || echo '$(srcdir)/'`core/dezhoukv.cpp
 
 MurmurHash3.lo: murmurhash3/MurmurHash3.cpp
 	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MurmurHash3.lo -MD -MP -MF $(DEPDIR)/MurmurHash3.Tpo -c -o MurmurHash3.lo `test -f 'murmurhash3/MurmurHash3.cpp' || echo '$(srcdir)/'`murmurhash3/MurmurHash3.cpp

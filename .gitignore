@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.Po
 
 # Precompiled Headers
 *.gch
@@ -35,6 +36,8 @@
 _lib/
 .libs/
 .deps/
+autom4te.cache/
+*.log
 
 dezhoukv/.libs
 dezhoukv/.deps
