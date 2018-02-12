@@ -50,10 +50,11 @@ host_triplet = @host@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/collect.mk $(top_srcdir)/common-rules.mk \
 	$(top_srcdir)/common.mk
-bin_PROGRAMS = dezhoukv$(EXEEXT)
+bin_PROGRAMS = dezhoukvredis$(EXEEXT)
 TESTS = dezhoukvtest$(EXEEXT) dezhoukvtest2$(EXEEXT)
 XFAIL_TESTS = dezhoukvtest2$(EXEEXT)
-noinst_PROGRAMS = dezhoukvtest$(EXEEXT) dezhoukvtest2$(EXEEXT)
+noinst_PROGRAMS = dezhoukv$(EXEEXT) dezhoukvtest$(EXEEXT) \
+	dezhoukvtest2$(EXEEXT)
 subdir = dezhoukv
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -140,6 +141,16 @@ am_dezhoukv_OBJECTS = dezhoukv-dezhoukv.$(OBJEXT) \
 dezhoukv_OBJECTS = $(am_dezhoukv_OBJECTS)
 dezhoukv_DEPENDENCIES = libdezhoukv2.la libmurmurhash3.la \
 	libbloomfilter.la libmaglev.la libredisio.la
+am_dezhoukvredis_OBJECTS = dezhoukvredis-rl.$(OBJEXT) \
+	dezhoukvredis-rl_util.$(OBJEXT) \
+	dezhoukvredis-rl_server.$(OBJEXT) \
+	dezhoukvredis-rl_connection.$(OBJEXT) \
+	dezhoukvredis-rl_request.$(OBJEXT) \
+	dezhoukvredis-rl_kv.$(OBJEXT)
+dezhoukvredis_OBJECTS = $(am_dezhoukvredis_OBJECTS)
+dezhoukvredis_DEPENDENCIES = libdezhoukv2.la libmurmurhash3.la \
+	libbloomfilter.la libmaglev.la libredisio.la \
+	libdezhoukvcore.la libleveldb.a
 am_dezhoukvtest_OBJECTS = dezhoukvtest.$(OBJEXT)
 dezhoukvtest_OBJECTS = $(am_dezhoukvtest_OBJECTS)
 dezhoukvtest_DEPENDENCIES = libdezhoukv2.la libdezhoukvcore.la
@@ -172,14 +183,14 @@ SOURCES = $(libdezhoukv3_a_SOURCES) $(libbloomfilter_la_SOURCES) \
 	$(libdezhoukv2_la_SOURCES) $(libdezhoukvcore_la_SOURCES) \
 	$(libhyperloglog_la_SOURCES) $(libmaglev_la_SOURCES) \
 	$(libmurmurhash3_la_SOURCES) $(libredisio_la_SOURCES) \
-	$(dezhoukv_SOURCES) $(dezhoukvtest_SOURCES) \
-	$(dezhoukvtest2_SOURCES)
+	$(dezhoukv_SOURCES) $(dezhoukvredis_SOURCES) \
+	$(dezhoukvtest_SOURCES) $(dezhoukvtest2_SOURCES)
 DIST_SOURCES = $(libdezhoukv3_a_SOURCES) $(libbloomfilter_la_SOURCES) \
 	$(libdezhoukv2_la_SOURCES) $(libdezhoukvcore_la_SOURCES) \
 	$(libhyperloglog_la_SOURCES) $(libmaglev_la_SOURCES) \
 	$(libmurmurhash3_la_SOURCES) $(libredisio_la_SOURCES) \
-	$(dezhoukv_SOURCES) $(dezhoukvtest_SOURCES) \
-	$(dezhoukvtest2_SOURCES)
+	$(dezhoukv_SOURCES) $(dezhoukvredis_SOURCES) \
+	$(dezhoukvtest_SOURCES) $(dezhoukvtest2_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -354,13 +365,13 @@ collectHEADERS_T = \
 	$(addprefix $(collectinclude_DIR)/, $(nobase_include_HEADERS)) \
 	$(addprefix $(collectinclude_DIR)/$(PACKAGE)/, $(nobase_pkginclude_HEADERS))
 
-dezhoukv_SOURCES = dezhoukv.cpp stdafx.cpp stdafx.h 
-dezhoukv_LDADD = libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la
+dezhoukvredis_SOURCES = rediswrapper/src/rl.cpp rediswrapper/src/rl_util.cpp rediswrapper/src/rl_server.cpp rediswrapper/src/rl_connection.cpp rediswrapper/src/rl_request.cpp rediswrapper/src/rl_kv.cpp
+dezhoukvredis_LDADD = libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la libdezhoukvcore.la libleveldb.a -lgmp -lsnappy -lev
 #dezhoukv_LDADD=libdezhoukv2.la @db4_LDADD@
 
 # Custom flags
 #dezhoukv_LDADD=-lz
-dezhoukv_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_srcdir)/dezhoukv/maglev/ 
+dezhoukvredis_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_srcdir)/dezhoukv/maglev/ -I$(top_srcdir)/dezhoukv/rediswrapper/src/ -I$(top_srcdir)/dezhoukv/rediswrapper/vendor/leveldb/include -I$(top_srcdir)/dezhoukv/bloomfilters/core/
 #dezhoukv_LDFLAGS=$(AM_LDFLAGS)
 #dezhoukv_CFLAGS=$(AM_CFLAGS) -O3 
 #dezhoukv_CXXFLAGS=$(AM_CXXFLAGS) -g
@@ -386,6 +397,9 @@ libdezhoukvcore_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/ -I$(top_s
 #for static libraray
 noinst_LIBRARIES = libdezhoukv3.a
 libdezhoukv3_a_SOURCES = dezhoukv3.cpp ktest.h
+dezhoukv_SOURCES = dezhoukv.cpp stdafx.cpp stdafx.h 
+dezhoukv_LDADD = libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la
+dezhoukv_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_srcdir)/dezhoukv/maglev/ 
 dezhoukvtest_SOURCES = dezhoukvtest.cpp ktest.h
 dezhoukvtest_LDADD = libdezhoukv2.la libdezhoukvcore.la
 dezhoukvtest2_SOURCES = dezhoukvtest.cpp
@@ -532,6 +546,9 @@ clean-noinstPROGRAMS:
 dezhoukv$(EXEEXT): $(dezhoukv_OBJECTS) $(dezhoukv_DEPENDENCIES) 
 	@rm -f dezhoukv$(EXEEXT)
 	$(CXXLINK) $(dezhoukv_OBJECTS) $(dezhoukv_LDADD) $(LIBS)
+dezhoukvredis$(EXEEXT): $(dezhoukvredis_OBJECTS) $(dezhoukvredis_DEPENDENCIES) 
+	@rm -f dezhoukvredis$(EXEEXT)
+	$(CXXLINK) $(dezhoukvredis_OBJECTS) $(dezhoukvredis_LDADD) $(LIBS)
 dezhoukvtest$(EXEEXT): $(dezhoukvtest_OBJECTS) $(dezhoukvtest_DEPENDENCIES) 
 	@rm -f dezhoukvtest$(EXEEXT)
 	$(CXXLINK) $(dezhoukvtest_OBJECTS) $(dezhoukvtest_LDADD) $(LIBS)
@@ -552,6 +569,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv-stdafx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukv3.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvredis-rl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvredis-rl_connection.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvredis-rl_kv.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvredis-rl_request.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvredis-rl_server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvredis-rl_util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dezhoukvtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdezhoukvcore_la-dezhoukv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/redis_client.Plo@am__quote@
@@ -660,6 +683,90 @@ dezhoukv-stdafx.obj: stdafx.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='stdafx.cpp' object='dezhoukv-stdafx.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukv_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukv-stdafx.obj `if test -f 'stdafx.cpp'; then $(CYGPATH_W) 'stdafx.cpp'; else $(CYGPATH_W) '$(srcdir)/stdafx.cpp'; fi`
+
+dezhoukvredis-rl.o: rediswrapper/src/rl.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl.o -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl.Tpo -c -o dezhoukvredis-rl.o `test -f 'rediswrapper/src/rl.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl.Tpo $(DEPDIR)/dezhoukvredis-rl.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl.cpp' object='dezhoukvredis-rl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl.o `test -f 'rediswrapper/src/rl.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl.cpp
+
+dezhoukvredis-rl.obj: rediswrapper/src/rl.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl.obj -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl.Tpo -c -o dezhoukvredis-rl.obj `if test -f 'rediswrapper/src/rl.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl.Tpo $(DEPDIR)/dezhoukvredis-rl.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl.cpp' object='dezhoukvredis-rl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl.obj `if test -f 'rediswrapper/src/rl.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl.cpp'; fi`
+
+dezhoukvredis-rl_util.o: rediswrapper/src/rl_util.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_util.o -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_util.Tpo -c -o dezhoukvredis-rl_util.o `test -f 'rediswrapper/src/rl_util.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_util.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_util.Tpo $(DEPDIR)/dezhoukvredis-rl_util.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_util.cpp' object='dezhoukvredis-rl_util.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_util.o `test -f 'rediswrapper/src/rl_util.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_util.cpp
+
+dezhoukvredis-rl_util.obj: rediswrapper/src/rl_util.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_util.obj -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_util.Tpo -c -o dezhoukvredis-rl_util.obj `if test -f 'rediswrapper/src/rl_util.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_util.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_util.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_util.Tpo $(DEPDIR)/dezhoukvredis-rl_util.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_util.cpp' object='dezhoukvredis-rl_util.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_util.obj `if test -f 'rediswrapper/src/rl_util.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_util.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_util.cpp'; fi`
+
+dezhoukvredis-rl_server.o: rediswrapper/src/rl_server.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_server.o -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_server.Tpo -c -o dezhoukvredis-rl_server.o `test -f 'rediswrapper/src/rl_server.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_server.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_server.Tpo $(DEPDIR)/dezhoukvredis-rl_server.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_server.cpp' object='dezhoukvredis-rl_server.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_server.o `test -f 'rediswrapper/src/rl_server.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_server.cpp
+
+dezhoukvredis-rl_server.obj: rediswrapper/src/rl_server.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_server.obj -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_server.Tpo -c -o dezhoukvredis-rl_server.obj `if test -f 'rediswrapper/src/rl_server.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_server.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_server.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_server.Tpo $(DEPDIR)/dezhoukvredis-rl_server.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_server.cpp' object='dezhoukvredis-rl_server.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_server.obj `if test -f 'rediswrapper/src/rl_server.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_server.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_server.cpp'; fi`
+
+dezhoukvredis-rl_connection.o: rediswrapper/src/rl_connection.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_connection.o -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_connection.Tpo -c -o dezhoukvredis-rl_connection.o `test -f 'rediswrapper/src/rl_connection.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_connection.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_connection.Tpo $(DEPDIR)/dezhoukvredis-rl_connection.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_connection.cpp' object='dezhoukvredis-rl_connection.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_connection.o `test -f 'rediswrapper/src/rl_connection.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_connection.cpp
+
+dezhoukvredis-rl_connection.obj: rediswrapper/src/rl_connection.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_connection.obj -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_connection.Tpo -c -o dezhoukvredis-rl_connection.obj `if test -f 'rediswrapper/src/rl_connection.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_connection.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_connection.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_connection.Tpo $(DEPDIR)/dezhoukvredis-rl_connection.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_connection.cpp' object='dezhoukvredis-rl_connection.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_connection.obj `if test -f 'rediswrapper/src/rl_connection.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_connection.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_connection.cpp'; fi`
+
+dezhoukvredis-rl_request.o: rediswrapper/src/rl_request.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_request.o -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_request.Tpo -c -o dezhoukvredis-rl_request.o `test -f 'rediswrapper/src/rl_request.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_request.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_request.Tpo $(DEPDIR)/dezhoukvredis-rl_request.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_request.cpp' object='dezhoukvredis-rl_request.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_request.o `test -f 'rediswrapper/src/rl_request.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_request.cpp
+
+dezhoukvredis-rl_request.obj: rediswrapper/src/rl_request.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_request.obj -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_request.Tpo -c -o dezhoukvredis-rl_request.obj `if test -f 'rediswrapper/src/rl_request.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_request.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_request.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_request.Tpo $(DEPDIR)/dezhoukvredis-rl_request.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_request.cpp' object='dezhoukvredis-rl_request.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_request.obj `if test -f 'rediswrapper/src/rl_request.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_request.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_request.cpp'; fi`
+
+dezhoukvredis-rl_kv.o: rediswrapper/src/rl_kv.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_kv.o -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_kv.Tpo -c -o dezhoukvredis-rl_kv.o `test -f 'rediswrapper/src/rl_kv.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_kv.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_kv.Tpo $(DEPDIR)/dezhoukvredis-rl_kv.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_kv.cpp' object='dezhoukvredis-rl_kv.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_kv.o `test -f 'rediswrapper/src/rl_kv.cpp' || echo '$(srcdir)/'`rediswrapper/src/rl_kv.cpp
+
+dezhoukvredis-rl_kv.obj: rediswrapper/src/rl_kv.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dezhoukvredis-rl_kv.obj -MD -MP -MF $(DEPDIR)/dezhoukvredis-rl_kv.Tpo -c -o dezhoukvredis-rl_kv.obj `if test -f 'rediswrapper/src/rl_kv.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_kv.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_kv.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dezhoukvredis-rl_kv.Tpo $(DEPDIR)/dezhoukvredis-rl_kv.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='rediswrapper/src/rl_kv.cpp' object='dezhoukvredis-rl_kv.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dezhoukvredis_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dezhoukvredis-rl_kv.obj `if test -f 'rediswrapper/src/rl_kv.cpp'; then $(CYGPATH_W) 'rediswrapper/src/rl_kv.cpp'; else $(CYGPATH_W) '$(srcdir)/rediswrapper/src/rl_kv.cpp'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

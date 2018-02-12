@@ -1,14 +1,14 @@
 include $(top_srcdir)/common.mk
 
 #for executable
-bin_PROGRAMS=dezhoukv 
-dezhoukv_SOURCES=dezhoukv.cpp stdafx.cpp stdafx.h 
-dezhoukv_LDADD=libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la
+bin_PROGRAMS=dezhoukvredis 
+dezhoukvredis_SOURCES=rediswrapper/src/rl.cpp rediswrapper/src/rl_util.cpp rediswrapper/src/rl_server.cpp rediswrapper/src/rl_connection.cpp rediswrapper/src/rl_request.cpp rediswrapper/src/rl_kv.cpp
+dezhoukvredis_LDADD=libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la libdezhoukvcore.la libleveldb.a -lgmp -lsnappy -lev
 #dezhoukv_LDADD=libdezhoukv2.la @db4_LDADD@
 
 # Custom flags
 #dezhoukv_LDADD=-lz
-dezhoukv_CPPFLAGS=$(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_srcdir)/dezhoukv/maglev/ 
+dezhoukvredis_CPPFLAGS=$(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_srcdir)/dezhoukv/maglev/ -I$(top_srcdir)/dezhoukv/rediswrapper/src/ -I$(top_srcdir)/dezhoukv/rediswrapper/vendor/leveldb/include -I$(top_srcdir)/dezhoukv/bloomfilters/core/
 #dezhoukv_LDFLAGS=$(AM_LDFLAGS)
 #dezhoukv_CFLAGS=$(AM_CFLAGS) -O3 
 #dezhoukv_CXXFLAGS=$(AM_CXXFLAGS) -g
@@ -47,7 +47,10 @@ TESTS=dezhoukvtest dezhoukvtest2
 XFAIL_TESTS=dezhoukvtest2
 
 #list PROGRAMS just built for test, "make check" will build programs below
-noinst_PROGRAMS=dezhoukvtest dezhoukvtest2
+noinst_PROGRAMS=dezhoukv dezhoukvtest dezhoukvtest2
+dezhoukv_SOURCES=dezhoukv.cpp stdafx.cpp stdafx.h 
+dezhoukv_LDADD=libdezhoukv2.la libmurmurhash3.la libbloomfilter.la libmaglev.la libredisio.la
+dezhoukv_CPPFLAGS=$(AM_CPPFLAGS) -I$(top_srcdir)/dezhoukv/bloomfilters/ -I$(top_srcdir)/dezhoukv/maglev/ 
 
 dezhoukvtest_SOURCES=dezhoukvtest.cpp ktest.h
 dezhoukvtest_LDADD=libdezhoukv2.la libdezhoukvcore.la

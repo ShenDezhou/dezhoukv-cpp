@@ -3,12 +3,13 @@
 #include "ktest.h"
 #include "core/dezhoukv.h"
 
+const int64_t thread_num = 1000;
 int main(int argc, char* argv[]) {
 	printf("KTEST: %s\n", argv[0]);
 	int r = kirby_dotest();
 	assert(r);
   init();
-  int64_t thread_num = 1000;
+  
   char key[20];
   double start = get_time();
   

@@ -30,6 +30,19 @@ Copyright (c) 2018-2019 Dezhou Shen,  Tsinghua
 
 #define FULL_VERSION PACKAGE_VERSION "-"
 
+const uint64_t BASE   =  7500000000ll;
+const int64_t OFFSET  = -2500000000ll;
+const int64_t A1     = -10000000000ll;
+const int64_t B1     =   1000000000ll;
+const int64_t C1     =   5000000000ll;
+const char* const mem_ip = "10.134.100.140";
+const char* const ssd_ip = "10.134.110.46";
+const char* const hdd_ip = "39.104.63.175";
+const double D1 = 0.03378;
+const double E1 = 0.1009;
+const double F1 = 1.0;
+const int SUCCESS = 0;
+const int ERROR = -1;
 RedisAdapter* *redis_mem;
 RedisAdapter* *redis_ssd;
 RedisAdapter* *redis_hdd;
@@ -161,7 +174,7 @@ int get(const char* key,  std::string &value) {
     }
     else {
         printf("Error\n");
-        exit(-1);
+        return ERROR;
     }
     start = get_time();
     if (bloom.probably_contains(result)) {
@@ -180,8 +193,8 @@ int get(const char* key,  std::string &value) {
         double start = get_time();
         int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
         printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
-        if (has_result)
-            return has_result;
+        if (has_result>0)
+          return SUCCESS;
     }
     else if ( current_count  >=  D1 * BASE && current_count  <  E1 * BASE ) {
         printf("max_possible requests:2\n");
@@ -191,9 +204,9 @@ int get(const char* key,  std::string &value) {
           double start = get_time();
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
           printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
-          if (has_result)
-            return has_result;
-          if( (char)(z+i) < 'k' ) {
+          if (has_result>0)
+            return SUCCESS;
+          if ( (char)(z+i) < 'k' ) {
             choose++;
             break;
           }  
@@ -207,16 +220,16 @@ int get(const char* key,  std::string &value) {
           double start = get_time();
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
           printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
-          if (has_result)
-            return has_result;
-          if( (char)(z+i) < 'k' ) {
+          if (has_result>0)
+            return SUCCESS;
+          if ( (char)(z+i) < 'k' ) {
             choose++;
             break;
           }
       }
     }
   }
-  return 0;
+  return ERROR;
 }
 
 int set(const char* key,  std::string value) {
@@ -243,7 +256,7 @@ int set(const char* key,  std::string value) {
     }
     else {
         printf("Error\n");
-        exit(-1);
+        return ERROR;
     }
     bloom.insert(result);
     for (size_t i  =  0; i  <  1; ++i) {
@@ -276,7 +289,9 @@ int set(const char* key,  std::string value) {
     printf("Endpoint :%016llx\n",  endpoint);
     int has_result  =  ((RedisAdapter*)endpoint)-> Set(key, value);
     printf("Set=%c,Result=%d\n",  z,  has_result);
-    return has_result;
-    return 0;
+    if (has_result == 0)
+        return SUCCESS;
+    return ERROR;
+
 }
 

@@ -10,3 +10,6 @@
 [submodule "dezhoukv/hyperloglog"]
 	path = dezhoukv/hyperloglog
 	url = git://github.com/rtdavis22/hyperloglog
+[submodule "dezhoukv/rediswrapper"]
+	path = dezhoukv/rediswrapper
+	url = git://github.com/ShenDezhou/sogou-qdb-redis
