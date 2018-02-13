@@ -37,7 +37,7 @@ const int64_t B1     =   1000000000ll;
 const int64_t C1     =   5000000000ll;
 const char* const mem_ip = "10.134.100.140";
 const char* const ssd_ip = "10.134.110.46";
-const char* const hdd_ip = "39.104.63.175";
+const char* const hdd_ip = "10.153.60.229";
 const double D1 = 0.03378;
 const double E1 = 0.1009;
 const double F1 = 1.0;
@@ -102,9 +102,9 @@ uint64_t CONVERT_FULL_VERSION(const char* text_svnversion) {
 
 int init_mem() {
     printf("Hello %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
-    int64_t backends[1];
     int64_t thread_num = 1;
-    redis_mem  =  new RedisAdapter*[1];
+    int64_t backends[thread_num];
+    redis_mem  =  new RedisAdapter*[thread_num];
     for (int64_t i  =  0; i  <  thread_num; i++)
     {
         backends[i]  =  i;
@@ -119,9 +119,9 @@ int init_mem() {
 
 int init_ssd() {
     printf("Hello %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
-    int64_t backends[1];
     int64_t thread_num = 1;
-    redis_ssd  =  new RedisAdapter*[1];
+    int64_t backends[thread_num];
+    redis_ssd  =  new RedisAdapter*[thread_num];
     for (int64_t i  =  0; i  <  1; i++) {
         backends[i]  =  i;
         redis_ssd[i]  =  new RedisAdapter(ssd_ip,  8323);
@@ -135,9 +135,9 @@ int init_ssd() {
 
 int init_hdd() {
     printf("Hello %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
-    int64_t backends[100];
-    int64_t thread_num = 100;
-    redis_hdd  =  new RedisAdapter*[100];
+    int64_t thread_num = 1;
+    int64_t backends[thread_num];
+    redis_hdd  =  new RedisAdapter*[thread_num];
     for (int64_t i  =  0; i  <  thread_num; i++) {
         backends[i]  =  i;
         redis_hdd[i]  =  new RedisAdapter(hdd_ip,  10100 + i);
@@ -255,7 +255,7 @@ int set(const char* key,  std::string value) {
         z = 'k';
     }
     else {
-        printf("Error\n");
+        printf("Error1\n");
         return ERROR;
     }
     bloom.insert(result);
@@ -263,25 +263,24 @@ int set(const char* key,  std::string value) {
           printf("false positive rate:%.4f\n", bloom.false_positive_rate());
     }
     double current_count  =  hyperll.raw_estimate();
-    printf("estimate distinct key:%.1d\n",  current_count);
+    printf("estimate distinct key:%.1f\n",  current_count);
     int choose;
     if ( current_count  <  D1 * BASE ) {
       choose  =  0;
     }
-    else if ( current_count >=  D1 * BASE && current_count <  E1 * BASE && z == 'i' || z == 'j'
-    ) {
+    else if ( current_count >=  D1 * BASE && current_count <  E1 * BASE) {
        choose  =  1;
     }
-    else if ( current_count >=  E1 * BASE && current_count <  F1 * BASE && z == 'i' ) {
+    else if ( current_count >=  E1 * BASE && current_count <  F1 * BASE) {
        choose  =  2;
     } else {
-       choose  =  -1;
+       printf("Error2\n");
+       return ERROR;
     }
     char z_;
-    if ( z+choose  >= 'i' && z+choose  <= 'k' ) {
+    if ( z+choose  >= 'i' && z+choose <= 'k' ) {
       z_  =  (char)(z+choose);
-    }
-    if ( choose  ==  -1 ) {
+    } else {
       z_  =  'k';
     }
     choose  =  z_-'i';
