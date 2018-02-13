@@ -30,13 +30,13 @@ Copyright (c) 2018-2019 Dezhou Shen,  Tsinghua
 
 #define FULL_VERSION PACKAGE_VERSION "-"
 
-const uint64_t BASE   =  7500000000ll;
-const int64_t OFFSET  = -2500000000ll;
+const uint64_t BASE   =  15000000000ll;
+const int64_t OFFSET  = -10000000000ll;
 const int64_t A1     = -10000000000ll;
 const int64_t B1     =   1000000000ll;
 const int64_t C1     =   5000000000ll;
-const char* const mem_ip = "10.134.100.140";
-const char* const ssd_ip = "10.134.110.46";
+const char* const mem_ip = "10.153.60.229";
+const char* const ssd_ip = "10.153.60.229";
 const char* const hdd_ip = "10.153.60.229";
 const double D1 = 0.03378;
 const double E1 = 0.1009;
@@ -124,9 +124,9 @@ int init_ssd() {
     redis_ssd  =  new RedisAdapter*[thread_num];
     for (int64_t i  =  0; i  <  1; i++) {
         backends[i]  =  i;
-        redis_ssd[i]  =  new RedisAdapter(ssd_ip,  8323);
+        redis_ssd[i]  =  new RedisAdapter(ssd_ip,  10100);
         int b  =  redis_ssd[i] ->  Open();
-        printf("port %d,  open %d\t",  8323,  b);
+        printf("port %d,  open %d\t",  10100,  b);
         backends[i]  =  (int64_t)redis_ssd[i];
     }
     lanton[1]  =  new_lanton(backends,  thread_num,  DEFAULT_LOOKUPTABLE_SIZE);
@@ -155,22 +155,22 @@ int get(const char* key,  std::string &value) {
     double start = get_time();
     MurmurHash3_x64_128(key, strlen(key), 0, out);
     int64_t hash  = ((int64_t*)out)[0] ^ ((int64_t*)out)[1];
-    int64_t result  =  hash % BASE + OFFSET;
+    int64_t result  =  (int64_t)(hash % BASE) + OFFSET;
     for (int i = 0; i < 1 ; i++) {
         printf("hashed:%016llx,t=%f\t", result,  get_time()-start);
     }
     char z;
     if ( A1  <  result && result  <= 0 ) {
         printf("i\n");
-        z = 'i';
+        z = 'j';
     }
     else if ( 0  <  result && result  <=  B1 ) {
         printf("j\n");
-        z = 'j';
+        z = 'k';
     }
     else if ( B1  <  result && result  <=  C1 ) {
         printf("k\n");
-        z = 'k';
+        z = 'i';
     }
     else {
         printf("Error\n");
@@ -199,9 +199,10 @@ int get(const char* key,  std::string &value) {
     else if ( current_count  >=  D1 * BASE && current_count  <  E1 * BASE ) {
         printf("max_possible requests:2\n");
         for (size_t i  =  0; i  <  2; ++i) {
-          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
-          printf("Endpoint :%016llx\n",  endpoint);
           double start = get_time();
+          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
+          printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
+          start = get_time();
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
           printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
           if (has_result>0)
@@ -215,9 +216,10 @@ int get(const char* key,  std::string &value) {
     else if ( current_count  >=  E1 * BASE && current_count  <=  F1 * BASE ) {
         printf("max_possible requests:3\n");
         for (size_t i  =  0; i  <  3; ++i) {
-          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
-          printf("Endpoint :%016llx\n",  endpoint);
           double start = get_time();
+          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
+          printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
+          start = get_time();
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
           printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
           if (has_result>0)
@@ -237,22 +239,22 @@ int set(const char* key,  std::string value) {
     char out[17];
     MurmurHash3_x64_128(key, strlen(key), 0, out);
     int64_t hash  = ((int64_t*)out)[0] ^ ((int64_t*)out)[1];
-    int64_t result  =  hash % BASE + OFFSET;
+    int64_t result  =  (int64_t)(hash % BASE) + OFFSET;
     for (int i = 0; i < 1 ; i++) {
         printf("hashed:%016llx\t", result);
     }
     char z;
     if ( A1  <  result && result  <= 0 ) {
         printf("i\n");
-        z = 'i';
+        z = 'j';
     }
     else if ( 0  <  result && result  <=  B1 ) {
         printf("j\n");
-        z = 'j';
+        z = 'k';
     }
     else if ( B1  <  result && result  <=  C1 ) {
         printf("k\n");
-        z = 'k';
+        z = 'i';
     }
     else {
         printf("Error1\n");
@@ -262,16 +264,17 @@ int set(const char* key,  std::string value) {
     for (size_t i  =  0; i  <  1; ++i) {
           printf("false positive rate:%.4f\n", bloom.false_positive_rate());
     }
+    hyperll.update(result);
     double current_count  =  hyperll.raw_estimate();
     printf("estimate distinct key:%.1f\n",  current_count);
     int choose;
-    if ( current_count  <  D1 * BASE ) {
+    if ( (uint64_t)current_count  <  D1 * BASE ) {
       choose  =  0;
     }
-    else if ( current_count >=  D1 * BASE && current_count <  E1 * BASE) {
+    else if ( (uint64_t)current_count >=  D1 * BASE && (uint64_t)current_count <  E1 * BASE) {
        choose  =  1;
     }
-    else if ( current_count >=  E1 * BASE && current_count <  F1 * BASE) {
+    else if ( (uint64_t)current_count >=  E1 * BASE && (uint64_t)current_count <  F1 * BASE) {
        choose  =  2;
     } else {
        printf("Error2\n");
