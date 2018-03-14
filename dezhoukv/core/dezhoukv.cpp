@@ -30,14 +30,19 @@ Copyright (c) 2018-2019 Dezhou Shen,  Tsinghua
 
 #define FULL_VERSION PACKAGE_VERSION "-"
 
+const int NODE_NUM = 1;
+const int PRIME_NODE = DEFAULT_LOOKUPTABLE_SIZE;
+const int DRAM_PORT = 10100;
+const int SSD_PORT = 10100;
+const int HDD_PORT = 10100;
 const uint64_t BASE   =  15000000000ll;
 const int64_t OFFSET  = -10000000000ll;
 const int64_t A1     = -10000000000ll;
 const int64_t B1     =   1000000000ll;
 const int64_t C1     =   5000000000ll;
-const char* const mem_ip = "10.153.60.229";
-const char* const ssd_ip = "10.153.60.229";
-const char* const hdd_ip = "10.153.60.229";
+const char* const mem_ip = "127.0.0.1";
+const char* const ssd_ip = "127.0.0.1";
+const char* const hdd_ip = "127.0.0.1";
 const double D1 = 0.03378;
 const double E1 = 0.1009;
 const double F1 = 1.0;
@@ -102,195 +107,200 @@ uint64_t CONVERT_FULL_VERSION(const char* text_svnversion) {
 
 int init_mem() {
     printf("Hello %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
-    int64_t thread_num = 1;
+    int64_t thread_num = NODE_NUM;
     int64_t backends[thread_num];
     redis_mem  =  new RedisAdapter*[thread_num];
     for (int64_t i  =  0; i  <  thread_num; i++)
     {
         backends[i]  =  i;
-        redis_mem[i]  =  new RedisAdapter(mem_ip,  6379 + i);
+        redis_mem[i]  =  new RedisAdapter(mem_ip,  DRAM_PORT + i);
         int b  =  redis_mem[i] ->  Open();
-        printf("port %d,  open %d\t",  6379+i,  b);
+        printf("port %d,  open %d\t",  DRAM_PORT+i,  b);
         backends[i]  =  (int64_t)redis_mem[i];
     }
-    lanton[0]  =  new_lanton(backends,  thread_num,  DEFAULT_LOOKUPTABLE_SIZE);
+    lanton[0]  =  new_lanton(backends,  thread_num,  PRIME_NODE);
     printf("\n");
 }
 
 int init_ssd() {
     printf("Hello %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
-    int64_t thread_num = 1;
+    int64_t thread_num = NODE_NUM;
     int64_t backends[thread_num];
     redis_ssd  =  new RedisAdapter*[thread_num];
-    for (int64_t i  =  0; i  <  1; i++) {
+    for (int64_t i  =  0; i  < thread_num ; i++) {
         backends[i]  =  i;
-        redis_ssd[i]  =  new RedisAdapter(ssd_ip,  10100);
+        redis_ssd[i]  =  new RedisAdapter(ssd_ip,  SSD_PORT + i);
         int b  =  redis_ssd[i] ->  Open();
-        printf("port %d,  open %d\t",  10100,  b);
+        printf("port %d,  open %d\t",  SSD_PORT + i,  b);
         backends[i]  =  (int64_t)redis_ssd[i];
     }
-    lanton[1]  =  new_lanton(backends,  thread_num,  DEFAULT_LOOKUPTABLE_SIZE);
+    lanton[1]  =  new_lanton(backends,  thread_num,  PRIME_NODE);
     printf("\n");
 }
 
 int init_hdd() {
     printf("Hello %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
-    int64_t thread_num = 1;
+    int64_t thread_num = NODE_NUM;
     int64_t backends[thread_num];
     redis_hdd  =  new RedisAdapter*[thread_num];
     for (int64_t i  =  0; i  <  thread_num; i++) {
         backends[i]  =  i;
-        redis_hdd[i]  =  new RedisAdapter(hdd_ip,  10100 + i);
+        redis_hdd[i]  =  new RedisAdapter(hdd_ip,  HDD_PORT + i);
         int b  =  redis_hdd[i] ->  Open();
-        printf("port %d,  open %d\t",  10100+i,  b);
+        printf("port %d,  open %d\t",  HDD_PORT + i,  b);
         backends[i]  =  (int64_t)redis_hdd[i];
     }
-    lanton[2]  =  new_lanton(backends,  thread_num,  DEFAULT_LOOKUPTABLE_SIZE);
+    lanton[2]  =  new_lanton(backends,  thread_num,  PRIME_NODE);
     printf("\n");
 }
 
 int get(const char* key,  std::string &value) {
-    printf("Get %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
+    //printf("Get %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
     char out[17];
     double start = get_time();
     MurmurHash3_x64_128(key, strlen(key), 0, out);
     int64_t hash  = ((int64_t*)out)[0] ^ ((int64_t*)out)[1];
     int64_t result  =  (int64_t)(hash % BASE) + OFFSET;
     for (int i = 0; i < 1 ; i++) {
-        printf("hashed:%016llx,t=%f\t", result,  get_time()-start);
+        //printf("hashed:%016llx,t=%f\t", result,  get_time()-start);
     }
     char z;
     if ( A1  <  result && result  <= 0 ) {
-        printf("i\n");
+        //printf("i\n");
         z = 'j';
     }
     else if ( 0  <  result && result  <=  B1 ) {
-        printf("j\n");
+        //printf("j\n");
         z = 'k';
     }
     else if ( B1  <  result && result  <=  C1 ) {
-        printf("k\n");
+        //printf("k\n");
         z = 'i';
     }
     else {
-        printf("Error\n");
+        //printf("Error\n");
         return ERROR;
     }
     start = get_time();
     if (bloom.probably_contains(result)) {
       for (size_t i  =  0; i  <  1; ++i) {
-            printf("false positive rate:%.4f,t=%f\n", bloom.false_positive_rate(), get_time()-start);
+            //printf("false positive rate:%.4f,t=%f\n", bloom.false_positive_rate(), get_time()-start);
       }
     int choose  =  z-'i';
     start = get_time();
-    double current_count  =  hyperll.raw_estimate();
-    printf("estimate distinct key:%.1f,t=%f\n",  current_count, get_time()-start);
-    if ( current_count  <  D1 * BASE ) {
-        printf("max_possible requests:1\n");
+    // double current_count  =  hyperll.raw_estimate();
+    //printf("estimate distinct key:%.1f,t=%f\n",  current_count, get_time()-start);
+    // if ( current_count  <  D1 * BASE ) {
+        //printf("max_possible requests:1\n");
         start = get_time();
-        int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
-        printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
+        int64_t endpoint  =  lookup_backend(lanton[choose],  (uint64_t) result);
+        //printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
         double start = get_time();
         int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
-        printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
+        printf("u=%c,r=%d,t=%f\n",z, has_result, get_time()-start);
         if (has_result>0)
           return SUCCESS;
-    }
-    else if ( current_count  >=  D1 * BASE && current_count  <  E1 * BASE ) {
-        printf("max_possible requests:2\n");
-        for (size_t i  =  0; i  <  2; ++i) {
-          double start = get_time();
-          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
-          printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
-          start = get_time();
-          int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
-          printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
-          if (has_result>0)
-            return SUCCESS;
-          if ( (char)(z+i) < 'k' ) {
-            choose++;
-            break;
-          }  
-      }
-    }
-    else if ( current_count  >=  E1 * BASE && current_count  <=  F1 * BASE ) {
-        printf("max_possible requests:3\n");
-        for (size_t i  =  0; i  <  3; ++i) {
-          double start = get_time();
-          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
-          printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
-          start = get_time();
-          int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
-          printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
-          if (has_result>0)
-            return SUCCESS;
-          if ( (char)(z+i) < 'k' ) {
-            choose++;
-            break;
-          }
-      }
-    }
+    // }
+    // else if ( current_count  >=  D1 * BASE && current_count  <  E1 * BASE ) {
+    //     printf("max_possible requests:2\n");
+    //     for (size_t i  =  0; i  <  2; ++i) {
+    //       double start = get_time();
+    //       int64_t endpoint  =  lookup_backend(lanton[choose],   (uint64_t) result);
+    //       printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
+    //       start = get_time();
+    //       int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
+    //       printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
+    //       if (has_result>0)
+    //         return SUCCESS;
+    //       if ( (char)(z+i) < 'k' ) {
+    //         choose++;
+    //         break;
+    //       }  
+    //   }
+    // }
+    // else if ( current_count  >=  E1 * BASE && current_count  <=  F1 * BASE ) {
+    //     printf("max_possible requests:3\n");
+    //     for (size_t i  =  0; i  <  3; ++i) {
+    //       double start = get_time();
+    //       int64_t endpoint  =  lookup_backend(lanton[choose],   (uint64_t) result);
+    //       printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
+    //       start = get_time();
+    //       int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
+    //       printf("Got:%s,t=%f\n", value.c_str(), get_time()-start);
+    //       if (has_result>0)
+    //         return SUCCESS;
+    //       if ( (char)(z+i) < 'k' ) {
+    //         choose++;
+    //         break;
+    //       }
+    //   }
+    // }
   }
   return ERROR;
 }
 
 int set(const char* key,  std::string value) {
-    printf("Set %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
+    //printf("Set %s %s-%s,  %08x,  %016llx\n",  PACKAGE_NAME,  PACKAGE_VERSION,  SVNVERSION,  CONVERT_VERSION(PACKAGE_VERSION),  CONVERT_FULL_VERSION(FULL_VERSION));
     char out[17];
+    double start = get_time();
     MurmurHash3_x64_128(key, strlen(key), 0, out);
     int64_t hash  = ((int64_t*)out)[0] ^ ((int64_t*)out)[1];
     int64_t result  =  (int64_t)(hash % BASE) + OFFSET;
     for (int i = 0; i < 1 ; i++) {
-        printf("hashed:%016llx\t", result);
+        //printf("hashed:%016llx,t=%f\t", result, get_time()-start);
     }
+    start = get_time();
     char z;
     if ( A1  <  result && result  <= 0 ) {
-        printf("i\n");
+        //printf("i\n");
         z = 'j';
     }
     else if ( 0  <  result && result  <=  B1 ) {
-        printf("j\n");
+        //printf("j\n");
         z = 'k';
     }
     else if ( B1  <  result && result  <=  C1 ) {
-        printf("k\n");
+        //printf("k\n");
         z = 'i';
     }
     else {
-        printf("Error1\n");
+        //printf("Error1\n");
         return ERROR;
     }
     bloom.insert(result);
     for (size_t i  =  0; i  <  1; ++i) {
-          printf("false positive rate:%.4f\n", bloom.false_positive_rate());
+          //printf("false positive rate:%.4f,t=%f\n", bloom.false_positive_rate(), get_time()-start);
     }
+    start = get_time();
     hyperll.update(result);
-    double current_count  =  hyperll.raw_estimate();
-    printf("estimate distinct key:%.1f\n",  current_count);
-    int choose;
-    if ( (uint64_t)current_count  <  D1 * BASE ) {
-      choose  =  0;
-    }
-    else if ( (uint64_t)current_count >=  D1 * BASE && (uint64_t)current_count <  E1 * BASE) {
-       choose  =  1;
-    }
-    else if ( (uint64_t)current_count >=  E1 * BASE && (uint64_t)current_count <  F1 * BASE) {
-       choose  =  2;
-    } else {
-       printf("Error2\n");
-       return ERROR;
-    }
-    char z_;
-    if ( z+choose  >= 'i' && z+choose <= 'k' ) {
-      z_  =  (char)(z+choose);
-    } else {
-      z_  =  'k';
-    }
-    choose  =  z_-'i';
-    int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
-    printf("Endpoint :%016llx\n",  endpoint);
+    // double current_count  =  hyperll.raw_estimate();
+    // //printf("estimate distinct key:%.1f,t=%f\n",  current_count, get_time()-start);
+    // start = get_time();
+    // int choose;
+    // if ( (uint64_t)current_count  <  D1 * BASE ) {
+    //    choose  =  0;
+    // }
+    // else if ( (uint64_t)current_count >=  D1 * BASE && (uint64_t)current_count <  E1 * BASE) {
+    //    choose  =  1;
+    // }
+    // else if ( (uint64_t)current_count >=  E1 * BASE && (uint64_t)current_count <  F1 * BASE) {
+    //    choose  =  2;
+    // } else {
+    //    //printf("Error2\n");
+    //    return ERROR;
+    // }
+    // char z_;
+    // if ( z+choose  >= 'i' && z+choose <= 'k' ) {
+    //   z_  =  (char)(z+choose);
+    // } else {
+    //   z_  =  'k';
+    // }
+    int choose  =  z-'i';
+    int64_t endpoint  =  lookup_backend(lanton[choose], (uint64_t) result);
+    //printf("Endpoint :%016llx,t=%f\n",  endpoint, get_time()-start);
+    start = get_time();
     int has_result  =  ((RedisAdapter*)endpoint)-> Set(key, value);
-    printf("Set=%c,Result=%d\n",  z,  has_result);
+    printf("u=%c,r=%d,t=%f\n",  z,  has_result, get_time()-start);
     if (has_result == 0)
         return SUCCESS;
     return ERROR;

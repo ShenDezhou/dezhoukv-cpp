@@ -169,7 +169,7 @@ int get(const char* key,  std::string &value) {
     printf("estimate distinct key:%.1d\n",  current_count);
     if ( current_count  <  D1 * BASE ) {
         printf("max_possible requests:1\n");
-        int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
+        int64_t endpoint  =  lookup_backend(lanton[choose], result);
         printf("Endpoint :%016llx\n",  endpoint);
         int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
         printf("Got:%s\n", value.c_str());
@@ -179,7 +179,7 @@ int get(const char* key,  std::string &value) {
     else if ( current_count  >=  D1 * BASE && current_count  <  E1 * BASE ) {
         printf("max_possible requests:2\n");
         for (size_t i  =  0; i  <  2; ++i) {
-          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
+          int64_t endpoint  =  lookup_backend(lanton[choose], result);
           printf("Endpoint :%016llx\n",  endpoint);
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
           printf("Got:%s\n", value.c_str());
@@ -194,7 +194,7 @@ int get(const char* key,  std::string &value) {
     else if ( current_count  >=  E1 * BASE && current_count  <=  F1 * BASE ) {
         printf("max_possible requests:3\n");
         for (size_t i  =  0; i  <  3; ++i) {
-          int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
+          int64_t endpoint  =  lookup_backend(lanton[choose],  result);
           printf("Endpoint :%016llx\n",  endpoint);
           int has_result  =  ((RedisAdapter*)endpoint)-> Get(key, value);
           printf("Got:%s\n", value.c_str());
@@ -263,7 +263,7 @@ int set(const char* key,  std::string value) {
       z_  =  'k';
     }
     choose  =  z_-'i';
-    int64_t endpoint  =  lookup_backend(lanton[choose],  (void*)(&result),  sizeof(result));
+    int64_t endpoint  =  lookup_backend(lanton[choose],  result);
     printf("Endpoint :%016llx\n",  endpoint);
     int has_result  =  ((RedisAdapter*)endpoint)-> Set(key, value);
     printf("Set=%c,Result=%d\n",  z,  has_result);
